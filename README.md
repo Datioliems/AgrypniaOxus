@@ -6,8 +6,6 @@ TensorFlow Lite CNN classifier.
 
 ## Project Goal
 
-Build a 4-day feasible final project that satisfies the AI course rubric:
-
 - clear AI problem definition with input/output and practical scope;
 - dataset collection, preprocessing, and labeling plan;
 - feature extraction using MediaPipe facial landmarks;
@@ -34,32 +32,32 @@ Required assets before full run:
 - `app/src/main/assets/face_landmarker.task` is included.
 - optional: `app/src/main/assets/drowsiness_model.tflite`
 
-## Recommended 4-Day Scope
+## Recommended 4-member Scope
 
 Use this Android app as the final demo target. If the Android build setup causes
 delay, keep a short Python/OpenCV demo as a backup, but present the Android
 pipeline as the main deployment architecture.
 
-Day 1:
+member 1:
 
 - Prepare datasets and labels.
 - Run Android camera preview and MediaPipe landmark baseline.
 - Record short self-collected videos using the target Android phone.
 
-Day 2:
+member 2:
 
 - Train a small CNN for eyes open/closed or yawning/not-yawning.
 - Evaluate with accuracy, precision, recall, F1-score, and confusion matrix.
 - Export to TensorFlow Lite.
 
-Day 3:
+member 3:
 
 - Put the `.tflite` model into Android assets.
 - Connect CNN output with the temporal warning logic.
 - Tune thresholds and smoothing duration.
 - Record final demo video.
 
-Day 4:
+member 4:
 
 - Finish report using the provided template.
 - Prepare an 8-minute explanation and demo script.
