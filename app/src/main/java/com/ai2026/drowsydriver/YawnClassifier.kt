@@ -72,7 +72,7 @@ class YawnClassifier(context: Context) {
         val yawnProb  = probs[yawnIdx]
         val bestIdx   = probs.indices.maxByOrNull { probs[it] } ?: return null
 
-        Log.v(TAG, "Yawn probs: no_yawn=${probs[0]:.3f} yawn=${probs[1]:.3f}")
+        Log.v(TAG, "Yawn probs: no_yawn=${"%.3f".format(probs[0])} yawn=${"%.3f".format(probs[1])}")
 
         return YawnPrediction(
             label      = LABELS[bestIdx],
@@ -112,5 +112,3 @@ class YawnClassifier(context: Context) {
         return buffer
     }
 }
-
-private val Float.fmt: String get() = "%.3f".format(this)

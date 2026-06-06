@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
     private val analyzer = DrowsinessAnalyzer()
     private var faceLandmarker: FaceLandmarker? = null
     private var tfliteClassifier: TfliteDrowsinessClassifier? = null
+    private var yawnClassifier: YawnClassifier? = null
     private var lastAnalyzedAt = 0L
     private var cnnClosedStartedAt: Long? = null
     @Volatile private var latestFrameStartedAt = 0L
@@ -60,6 +61,8 @@ class MainActivity : ComponentActivity() {
         eventLogger = EventLogger(this)
         tfliteClassifier = TfliteDrowsinessClassifier(this)
         tfliteClassifier?.logStatus()   // log CNN status khi khởi động
+        yawnClassifier = YawnClassifier(this)
+        yawnClassifier?.logStatus()     // log Yawn CNN status
         setupUi()
         setupFaceLandmarker()
 
@@ -75,6 +78,7 @@ class MainActivity : ComponentActivity() {
         cameraExecutor.shutdown()
         faceLandmarker?.close()
         tfliteClassifier?.close()
+        yawnClassifier?.close()
     }
 
     private fun setupUi() {
@@ -220,8 +224,9 @@ class MainActivity : ComponentActivity() {
             0L
         }
         val heuristicStatus = analyzer.analyze(result, SystemClock.uptimeMillis())
-        val cnnPrediction = classifyEyeRoi(result)
-        val status = buildHybridStatus(heuristicStatus, cnnPrediction, latencyMs)
+        val cnnPrediction   = classifyEyeRoi(result)
+        val yawnPrediction  = classifyMouthRoi(result)
+        val status = buildHybridStatus(heuristicStatus, cnnPrediction, yawnPrediction, latencyMs)
         runOnUiThread {
             overlayView.update(status)
             alertController.update(status)
@@ -236,10 +241,12 @@ class MainActivity : ComponentActivity() {
     private fun buildHybridStatus(
         heuristicStatus: DriverStatus,
         cnnPrediction: CnnPrediction?,
+        yawnPrediction: YawnClassifier.YawnPrediction?,
         latencyMs: Long
     ): DriverStatus {
         val now = SystemClock.uptimeMillis()
-        // Dùng ngưỡng từ classifier constant (0.55f) thay vì hardcode 0.70f
+
+        // ── Eye CNN logic (temporal: mắt nhắm liên tục ≥1.2s → DROWSY) ──────
         val cnnClosed = cnnPrediction?.label == "eyes_closed" &&
                 cnnPrediction.confidence >= TfliteDrowsinessClassifier.CNN_CONF_THRESHOLD
         val cnnClosedMs = if (cnnClosed) {
@@ -249,40 +256,48 @@ class MainActivity : ComponentActivity() {
             cnnClosedStartedAt = null
             0L
         }
-
-        val cnnState = when {
+        val cnnEyeState = when {
             cnnClosedMs >= 1_200L -> DriverState.DROWSY
-            cnnClosedMs > 0L -> DriverState.EYES_CLOSED
-            else -> DriverState.AWAKE
+            cnnClosedMs > 0L      -> DriverState.EYES_CLOSED
+            else                  -> DriverState.AWAKE
         }
+
+        // ── Yawn detection: CNN Yawn hoặc MAR heuristic ────────────────────
+        val cnnYawning   = yawnPrediction?.isYawning == true
+        val marYawning   = heuristicStatus.state == DriverState.YAWNING
+        val isYawning    = cnnYawning || marYawning
 
         val shouldUseCnn = cnnPrediction != null &&
             cnnPrediction.confidence >= TfliteDrowsinessClassifier.CNN_CONF_THRESHOLD &&
-            heuristicStatus.state != DriverState.YAWNING
+            !isYawning
 
+        // ── Fused state ────────────────────────────────────────────────────
         val fusedState = when {
-            heuristicStatus.state == DriverState.NO_FACE -> DriverState.NO_FACE
-            heuristicStatus.state == DriverState.YAWNING -> DriverState.YAWNING
-            shouldUseCnn && cnnState == DriverState.DROWSY -> DriverState.DROWSY
-            shouldUseCnn && cnnState == DriverState.EYES_CLOSED -> DriverState.EYES_CLOSED
-            heuristicStatus.state == DriverState.DROWSY -> DriverState.DROWSY
+            heuristicStatus.state == DriverState.NO_FACE                                       -> DriverState.NO_FACE
+            isYawning                                                                          -> DriverState.YAWNING
+            shouldUseCnn && cnnEyeState == DriverState.DROWSY                                  -> DriverState.DROWSY
+            shouldUseCnn && cnnEyeState == DriverState.EYES_CLOSED                            -> DriverState.EYES_CLOSED
+            heuristicStatus.state == DriverState.DROWSY                                        -> DriverState.DROWSY
             heuristicStatus.state == DriverState.EYES_CLOSED && cnnPrediction?.label != "eyes_open" -> DriverState.EYES_CLOSED
-            shouldUseCnn && cnnState == DriverState.AWAKE -> DriverState.AWAKE
-            else -> heuristicStatus.state
+            shouldUseCnn && cnnEyeState == DriverState.AWAKE                                   -> DriverState.AWAKE
+            else                                                                               -> heuristicStatus.state
         }
 
         val fusedConfidence = when {
-            fusedState == DriverState.DROWSY && cnnState == DriverState.DROWSY -> cnnPrediction?.confidence ?: heuristicStatus.confidence
-            fusedState == DriverState.EYES_CLOSED && cnnState == DriverState.EYES_CLOSED -> cnnPrediction?.confidence ?: heuristicStatus.confidence
+            fusedState == DriverState.YAWNING && cnnYawning    -> yawnPrediction?.confidence ?: heuristicStatus.confidence
+            fusedState == DriverState.DROWSY && cnnEyeState == DriverState.DROWSY -> cnnPrediction?.confidence ?: heuristicStatus.confidence
+            fusedState == DriverState.EYES_CLOSED && cnnEyeState == DriverState.EYES_CLOSED -> cnnPrediction?.confidence ?: heuristicStatus.confidence
             else -> heuristicStatus.confidence
         }
 
         val alertSource = when {
-            heuristicStatus.state == DriverState.YAWNING -> "MAR"
-            shouldUseCnn && (cnnState == DriverState.DROWSY || cnnState == DriverState.EYES_CLOSED) -> "CNN + temporal"
+            cnnYawning && marYawning -> "CNN Yawn + MAR"
+            cnnYawning               -> "CNN Yawn"
+            marYawning               -> "MAR"
+            shouldUseCnn && (cnnEyeState == DriverState.DROWSY || cnnEyeState == DriverState.EYES_CLOSED) -> "CNN Eye + temporal"
             heuristicStatus.state == DriverState.DROWSY || heuristicStatus.state == DriverState.EYES_CLOSED -> "EAR/MAR fallback"
-            shouldUseCnn -> "CNN"
-            else -> "EAR/MAR"
+            shouldUseCnn             -> "CNN Eye"
+            else                     -> "EAR/MAR"
         }
 
         return heuristicStatus.copy(
@@ -315,6 +330,19 @@ class MainActivity : ComponentActivity() {
         val leftEye = cropLandmarkRegion(bitmap, face, intArrayOf(33, 133, 160, 158, 153, 144))
         val rightEye = cropLandmarkRegion(bitmap, face, intArrayOf(362, 263, 385, 387, 373, 380))
         return listOfNotNull(leftEye, rightEye)
+    }
+
+    /** Crop vùng miệng từ MediaPipe landmarks để feed CNN Yawn */
+    private fun classifyMouthRoi(result: FaceLandmarkerResult): YawnClassifier.YawnPrediction? {
+        val classifier = yawnClassifier ?: return null
+        if (!classifier.isAvailable) return null
+        val bitmap = latestBitmap ?: return null
+        val face   = result.faceLandmarks().firstOrNull() ?: return null
+        // Landmarks bao quanh miệng: góc trái/phải + môi trên/dưới + các điểm ngoài
+        val mouthBitmap = cropLandmarkRegion(
+            bitmap, face, intArrayOf(61, 291, 0, 17, 39, 269, 91, 321, 181, 405)
+        ) ?: return null
+        return classifier.predict(mouthBitmap)
     }
 
     private fun cropLandmarkRegion(
