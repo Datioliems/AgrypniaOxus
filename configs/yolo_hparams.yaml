@@ -1,0 +1,50 @@
+# ═══════════════════════════════════════════════════════════════════
+# YOLO Hyperparameters — Chinh sua o day truoc moi lan train
+# Moi lan muon thu nghiem: doi note + cac tham so → chay lai Cell 6
+# ═══════════════════════════════════════════════════════════════════
+
+# Ghi chu cho experiment nay (hien trong bang so sanh)
+note: "baseline yolov8s - clean 2class dataset"
+
+# ── Model ────────────────────────────────────────────────────────
+model: yolov8s       # yolov8n | yolov8s | yolov8m | yolo26m
+epochs: 50
+imgsz: 640
+batch: -1            # -1 = tu dong theo VRAM (recommend)
+patience: 15         # early stopping: dung neu khong cai thien sau N epoch
+
+# ── Optimizer ───────────────────────────────────────────────────
+optimizer: auto      # auto | SGD | Adam | AdamW
+lr0: 0.01            # learning rate ban dau
+lrf: 0.01            # learning rate cuoi = lr0 * lrf
+momentum: 0.937
+weight_decay: 0.0005
+warmup_epochs: 3.0
+warmup_momentum: 0.8
+warmup_bias_lr: 0.1
+cos_lr: true         # cosine LR schedule (tot hon step LR)
+
+# ── Loss weights ────────────────────────────────────────────────
+box: 7.5             # box regression loss weight
+cls: 0.5             # classification loss weight
+dfl: 1.5             # distribution focal loss weight
+
+# ── Augmentation ────────────────────────────────────────────────
+# Anh khuon mat: khong augment qua manh
+hsv_h: 0.015         # hue shift
+hsv_s: 0.400         # saturation
+hsv_v: 0.400         # value/brightness
+degrees: 5.0         # xoay nhe (khuon mat khong xoay nhieu)
+translate: 0.1
+scale: 0.5
+shear: 0.0
+perspective: 0.0
+flipud: 0.0          # KHONG lat doc (khuon mat)
+fliplr: 0.5          # lat ngang OK
+mosaic: 0.5          # mosaic augmentation
+mixup: 0.0           # mixup (0 = tat)
+copy_paste: 0.0
+
+# ── Tham so khac ────────────────────────────────────────────────
+close_mosaic: 10     # tat mosaic 10 epoch cuoi de on dinh
+dropout: 0.0         # dropout (chi cho classification head)

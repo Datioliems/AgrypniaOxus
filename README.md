@@ -129,7 +129,11 @@ latency.
 - `docs/AI_MODEL_AND_DEPLOYMENT_FULL_GUIDE.md`: end-to-end guide for training, Android, Streamlit, and other deployment paths.
 - `docs/IS54A_REQUIREMENTS_COVERAGE.md`: direct mapping from the IS54A grading file to project artifacts.
 - `docs/STREAMLIT_AND_OTHER_DEPLOYMENT.md`: Streamlit fallback and alternative deployment systems.
+- `docs/IPHONE_IOS_DEPLOYMENT_PLAN.md`: iPhone/iOS deployment options explaining why APK is Android-only and what must be rebuilt for iOS.
+- `ios/`: Swift/SwiftUI scaffold for a future native iPhone app branch.
+- `web/iphone-pwa/`: Safari/PWA demo for iPhone with HTTPS camera, MediaPipe EAR/MAR, alerts, event log, dashboard, and trusted-contact notification flow.
 - `docs/IS54A_VISUAL_AI_DEPLOYMENT_ROADMAP.html`: visual HTML roadmap for the IS54A rubric, AI model, Android, and Streamlit.
+- `docs/DROWSINESS_SLEEP_SAFETY_DASHBOARD.html`: visual dashboard concept for drowsiness timing, sleep-risk analysis, escalation alerts, recommendations, and trusted-contact location notification.
 - `docs/MEDIAPIPE_LANDMARK_PIPELINE.md`: MediaPipe + EAR/MAR + CNN/TFLite method.
 - `docs/YOLO_END_TO_END_PIPELINE.md`: YOLO object-detection alternative.
 - `docs/MEDIAPIPE_VS_YOLO_COMPARISON.md`: decision table comparing both methods.
@@ -143,6 +147,8 @@ latency.
   report following the official IS54A frame with cover page, contribution table,
   table-of-contents placeholder, abbreviations, chapters 1-4, conclusion, and
   references.
+- `outputs/Bao_cao_IS54A_DrowsyDriverAndroid_bo_sung_am_thanh_dashboard.docx`: IS54A report copy with an added Vietnamese research section about auditory alerts, safe anti-drowsiness intervention, sleep dashboard, and trusted-contact notification.
+- `outputs/Bao_cao_IS54A_DrowsyDriverAndroid_bo_sung_am_thanh_lien_tuc_dashboard.docx`: extended report copy adding the bounded continuous-arousal sound mechanism with 500 Hz, 1750 Hz, and 3000 Hz modes plus safety limits.
 - `docs/THI_NGHIEM_VA_BANG_KET_QUA.md`: experiment design and result tables.
 - `docs/EDA_PREPROCESS_FEATURE_TRAINING_RESULTS.md`: actual EDA, preprocessing,
   feature engineering, training, and evaluation results.
@@ -161,6 +167,7 @@ latency.
 - `tools/build_android.ps1`: Windows Android build helper.
 - `tools/package_submission.ps1`: creates a zip with project/report/docs artifacts.
 - `tools/verify_project.py`: verifies required artifacts and writes project verification reports.
+- `tools/run_iphone_pwa_server.py`: serves the iPhone PWA demo on the local network.
 - `streamlit_app.py`: Streamlit fallback demo for uploaded images or webcam snapshots.
 - `requirements-streamlit.txt`: Streamlit fallback dependencies.
 - `outputs/project_verification.md`: latest required/optional artifact verification report.

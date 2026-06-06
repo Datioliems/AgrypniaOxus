@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drowsiness Sleep Safety Dashboard</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --muted: #5f6b7a;
+      --line: #d9dee7;
+      --panel: #ffffff;
+      --bg: #f5f7fb;
+      --green: #15803d;
+      --amber: #b7791f;
+      --red: #b91c1c;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --violet: #6d28d9;
+      --shadow: 0 10px 28px rgba(24, 35, 54, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+
+    header {
+      background: #101827;
+      color: #ffffff;
+      padding: 22px 28px 18px;
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 6px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin-bottom: 0;
+      color: #cbd5e1;
+      max-width: 820px;
+    }
+
+    .status-pill {
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 6px;
+      padding: 10px 12px;
+      min-width: 230px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .status-pill strong {
+      display: block;
+      font-size: 13px;
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+
+    .status-pill span {
+      display: block;
+      margin-top: 2px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 22px 24px 36px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      padding: 14px;
+      min-height: 104px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 25px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .metric-note {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .panel {
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .panel h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 3px;
+      margin-top: 12px;
+      min-height: 86px;
+    }
+
+    .hour {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      min-height: 8px;
+      background: #d1d5db;
+    }
+
+    .hour small {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      display: inline-block;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .row:last-child { border-bottom: 0; }
+
+    .row strong {
+      font-size: 13px;
+      color: #334155;
+    }
+
+    .row span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .alert-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .alert-item {
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--amber);
+      border-radius: 7px;
+      padding: 10px 12px;
+      background: #fffaf0;
+    }
+
+    .alert-item.danger {
+      border-left-color: var(--red);
+      background: #fff5f5;
+    }
+
+    .alert-item.safe {
+      border-left-color: var(--green);
+      background: #f0fdf4;
+    }
+
+    .alert-item strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #111827;
+      color: #ffffff;
+    }
+
+    button.secondary {
+      background: #ffffff;
+      color: #111827;
+      border-color: var(--line);
+    }
+
+    button.warning { background: var(--amber); }
+    button.danger { background: var(--red); }
+    button.location { background: var(--blue); }
+
+    button.stop {
+      background: #374151;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    .recommendations {
+      display: grid;
+      gap: 10px;
+    }
+
+    .recommendation {
+      border-left: 5px solid var(--teal);
+      padding: 10px 12px;
+      background: #f0fdfa;
+      border-radius: 7px;
+    }
+
+    .source-box {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    a { color: var(--blue); }
+
+    @media (max-width: 980px) {
+      .header-inner, .grid, .cards {
+        grid-template-columns: 1fr;
+      }
+
+      main { padding: 16px; }
+
+      .timeline {
+        grid-template-columns: repeat(12, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div>
+        <h1>Drowsiness Sleep Safety Dashboard</h1>
+        <p>Trang đề xuất mở rộng cho hệ thống phát hiện buồn ngủ: phân tích thời điểm buồn ngủ thường xuyên, cảnh báo theo cấp độ, khuyến nghị nghỉ và gửi vị trí cho liên hệ tin cậy khi rủi ro cao.</p>
+      </div>
+      <div class="status-pill">
+        <strong>Trạng thái phiên lái</strong>
+        <span id="sessionStatus">Risk monitoring</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="cards">
+      <div class="card">
+        <div class="metric-label">Sleep risk score</div>
+        <div class="metric-value" id="riskScore">72</div>
+        <div class="metric-note">Cao do nhiều cảnh báo sau 13:00</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Cảnh báo hôm nay</div>
+        <div class="metric-value">9</div>
+        <div class="metric-note">3 cảnh báo cấp nguy hiểm</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Tổng thời lượng drowsy</div>
+        <div class="metric-value">42s</div>
+        <div class="metric-note">Tích lũy trong 5 phút gần nhất: 18s</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Khuyến nghị hiện tại</div>
+        <div class="metric-value">Dừng xe</div>
+        <div class="metric-note">Caffeine + ngủ ngắn 15-20 phút</div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section>
+        <div class="panel">
+          <h2>Phân tích thời điểm buồn ngủ trong ngày</h2>
+          <p>Heatmap giả lập từ event log Android/Streamlit. Màu càng đậm thể hiện cảnh báo buồn ngủ càng nhiều ở khung giờ đó.</p>
+          <div class="timeline" id="timeline"></div>
+          <div class="legend">
+            <span><i class="dot" style="background:#c7d2fe"></i>Thấp</span>
+            <span><i class="dot" style="background:#facc15"></i>Trung bình</span>
+            <span><i class="dot" style="background:#f97316"></i>Cao</span>
+            <span><i class="dot" style="background:#dc2626"></i>Nguy hiểm</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Cơ chế cảnh báo và âm thanh</h2>
+          <div class="row">
+            <strong>Cấp 1</strong>
+            <span>Beep ngắn 800-1200 Hz khi mắt nhắm vượt ngưỡng ngắn.</span>
+          </div>
+          <div class="row">
+            <strong>Cấp 2</strong>
+            <span>Âm xen kẽ 1000 Hz và 2500 Hz, kèm lời nhắc quay lại trạng thái tỉnh táo.</span>
+          </div>
+          <div class="row">
+            <strong>Cấp 3</strong>
+            <span>Âm cảnh báo mạnh hơn, yêu cầu dừng xe; nếu không phản hồi, chuẩn bị gửi vị trí cho liên hệ tin cậy.</span>
+          </div>
+          <div class="actions">
+            <button class="secondary" onclick="playLevel(1)">Phát cấp 1</button>
+            <button class="warning" onclick="playLevel(2)">Phát cấp 2</button>
+            <button class="danger" onclick="playLevel(3)">Phát cấp 3</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Nền kích thích âm thanh có giới hạn</h2>
+          <p>Chỉ bật khi người lái có cảnh báo buồn ngủ lặp lại. Cơ chế này không thay thế nghỉ ngơi; nếu vẫn buồn ngủ sau 30-60 giây, hệ thống chuyển sang yêu cầu dừng xe.</p>
+          <div class="row">
+            <strong>Low tone</strong>
+            <span>500 Hz theo nhịp chậm, ít gắt hơn, dùng khi rủi ro vừa.</span>
+          </div>
+          <div class="row">
+            <strong>Mid arousal</strong>
+            <span>1750 Hz có nhịp, là chế độ chính để giữ chú ý trong thời gian rất ngắn.</span>
+          </div>
+          <div class="row">
+            <strong>High urgency</strong>
+            <span>3000 Hz xen kẽ ngắn để tạo độ khẩn cấp, không phát kéo dài.</span>
+          </div>
+          <div class="actions">
+            <button class="secondary" onclick="startBackgroundArousal('low')">Nền low</button>
+            <button class="warning" onclick="startBackgroundArousal('mid')">Nền mid</button>
+            <button class="danger" onclick="startBackgroundArousal('high')">Nền high</button>
+            <button class="stop" onclick="stopBackgroundArousal()">Dừng nền</button>
+          </div>
+          <p id="arousalText" class="source-box" style="margin-top:12px;">Nền kích thích đang tắt. Mỗi lần bật sẽ tự ngắt sau 30 giây trong bản demo.</p>
+        </div>
+
+        <div class="panel">
+          <h2>Nghiên cứu và giới hạn an toàn</h2>
+          <div class="source-box">
+            Không có bằng chứng chắc chắn rằng một tần số đơn lẻ có thể làm tài xế hết buồn ngủ ngay lập tức. Nghiên cứu lái xe mô phỏng từng khảo sát tone liên tục/tone burst ở 500 Hz, 1750 Hz và 3000 Hz, nhưng cơ chế này chỉ nên xem là hỗ trợ chú ý ngắn hạn. Với cảnh báo nặng hoặc lặp lại, khuyến nghị đúng là dừng xe ở nơi an toàn, dùng caffeine nếu phù hợp và ngủ ngắn 15-20 phút.
+          </div>
+        </div>
+      </section>
+
+      <aside>
+        <div class="panel">
+          <h2>Khuyến nghị cá nhân hóa</h2>
+          <div class="recommendations">
+            <div class="recommendation"><strong>Ngay bây giờ:</strong> Dừng xe tại vị trí an toàn, không tiếp tục lái nếu còn buồn ngủ.</div>
+            <div class="recommendation"><strong>Trong 20 phút:</strong> Uống cà phê nếu không chống chỉ định và ngủ ngắn 15-20 phút.</div>
+            <div class="recommendation"><strong>Trong tuần:</strong> Kiểm tra các khung giờ thường có cảnh báo; tránh lái dài vào khung giờ lặp lại rủi ro.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Liên hệ tin cậy và vị trí</h2>
+          <p>Chức năng mô phỏng gửi cảnh báo cho người thân. Bản thực tế cần xin quyền vị trí và không gửi video khuôn mặt mặc định.</p>
+          <label for="contact">Liên hệ tin cậy</label>
+          <input id="contact" value="Nguoi than / so dien thoai" aria-label="Trusted contact">
+          <div class="actions">
+            <button class="location" onclick="getLocation()">Lấy vị trí</button>
+            <button class="danger" onclick="notifyContact()">Mô phỏng gửi cảnh báo</button>
+          </div>
+          <p id="locationText" class="source-box" style="margin-top:12px;">Chưa có vị trí.</p>
+        </div>
+
+        <div class="panel">
+          <h2>Event log mẫu</h2>
+          <div class="alert-list">
+            <div class="alert-item safe"><strong>09:10 - Awake</strong><span>EAR ổn định, không có yawning.</span></div>
+            <div class="alert-item"><strong>13:42 - Drowsy warning</strong><span>Mắt nhắm 2.1s, cảnh báo cấp 2.</span></div>
+            <div class="alert-item danger"><strong>13:51 - High risk</strong><span>3 cảnh báo cấp 2 trong 10 phút, đề xuất dừng xe.</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const timeline = document.getElementById("timeline");
+    const risk = [2, 3, 4, 3, 2, 1, 1, 1, 2, 2, 4, 5, 7, 10, 8, 5, 4, 6, 7, 5, 4, 3, 3, 2];
+
+    function colorFor(value) {
+      if (value >= 8) return "#dc2626";
+      if (value >= 6) return "#f97316";
+      if (value >= 4) return "#facc15";
+      return "#c7d2fe";
+    }
+
+    risk.forEach((value, hour) => {
+      const item = document.createElement("div");
+      item.className = "hour";
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.height = `${Math.max(8, value * 7)}px`;
+      bar.style.background = colorFor(value);
+      const label = document.createElement("small");
+      label.textContent = String(hour).padStart(2, "0");
+      item.appendChild(bar);
+      item.appendChild(label);
+      timeline.appendChild(item);
+    });
+
+    function tone(ctx, frequency, start, duration, gainValue) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = frequency;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + duration + 0.05);
+    }
+
+    function playLevel(level) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime + 0.05;
+      if (level === 1) {
+        tone(ctx, 1000, now, 0.25, 0.16);
+      } else if (level === 2) {
+        [1000, 2500, 1000, 2500].forEach((freq, index) => tone(ctx, freq, now + index * 0.32, 0.22, 0.2));
+      } else {
+        [900, 2400, 900, 2400, 900, 2400].forEach((freq, index) => tone(ctx, freq, now + index * 0.24, 0.2, 0.25));
+      }
+    }
+
+    let arousalCtx = null;
+    let arousalNodes = [];
+    let arousalTimer = null;
+
+    function startBackgroundArousal(mode) {
+      stopBackgroundArousal();
+      arousalCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const output = document.getElementById("arousalText");
+      const now = arousalCtx.currentTime;
+      const frequencies = {
+        low: [500, 500, 750],
+        mid: [1750, 500, 1750, 3000],
+        high: [3000, 1750, 3000, 500]
+      }[mode] || [1750, 500, 3000];
+
+      output.textContent = `Đang bật nền kích thích ${mode}. Đây là demo giới hạn 30 giây, không dùng thay thế việc dừng xe/ngủ ngắn.`;
+
+      frequencies.forEach((frequency, index) => {
+        const osc = arousalCtx.createOscillator();
+        const gain = arousalCtx.createGain();
+        osc.frequency.value = frequency;
+        osc.type = mode === "high" ? "square" : "sine";
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(mode === "high" ? 0.055 : 0.04, now + 0.15);
+
+        const lfo = arousalCtx.createOscillator();
+        const lfoGain = arousalCtx.createGain();
+        lfo.frequency.value = 1.4 + index * 0.25;
+        lfoGain.gain.value = mode === "high" ? 0.035 : 0.025;
+        lfo.connect(lfoGain).connect(gain.gain);
+
+        osc.connect(gain).connect(arousalCtx.destination);
+        osc.start(now + index * 0.05);
+        lfo.start(now + index * 0.05);
+        arousalNodes.push(osc, lfo, gain);
+      });
+
+      arousalTimer = window.setTimeout(() => {
+        stopBackgroundArousal();
+        document.getElementById("arousalText").textContent = "Nền kích thích đã tự ngắt sau 30 giây. Nếu vẫn buồn ngủ, hệ thống yêu cầu dừng xe và nghỉ.";
+      }, 30000);
+    }
+
+    function stopBackgroundArousal() {
+      if (arousalTimer) {
+        window.clearTimeout(arousalTimer);
+        arousalTimer = null;
+      }
+      arousalNodes.forEach((node) => {
+        try {
+          if (typeof node.stop === "function") node.stop();
+          if (typeof node.disconnect === "function") node.disconnect();
+        } catch (e) {}
+      });
+      arousalNodes = [];
+      if (arousalCtx) {
+        try { arousalCtx.close(); } catch (e) {}
+        arousalCtx = null;
+      }
+      const output = document.getElementById("arousalText");
+      if (output) output.textContent = "Nền kích thích đang tắt. Mỗi lần bật sẽ tự ngắt sau 30 giây trong bản demo.";
+    }
+
+    function getLocation() {
+      const output = document.getElementById("locationText");
+      if (!navigator.geolocation) {
+        output.textContent = "Trình duyệt không hỗ trợ geolocation.";
+        return;
+      }
+      output.textContent = "Đang lấy vị trí...";
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(6);
+          const lon = pos.coords.longitude.toFixed(6);
+          output.textContent = `Vị trí gần nhất: ${lat}, ${lon}`;
+        },
+        () => {
+          output.textContent = "Không lấy được vị trí. Cần cấp quyền hoặc dùng bản app Android.";
+        }
+      );
+    }
+
+    function notifyContact() {
+      const contact = document.getElementById("contact").value || "lien he tin cay";
+      const locationText = document.getElementById("locationText").textContent;
+      alert(`Mô phỏng gửi cảnh báo tới ${contact}\\nSự kiện: DROWSY_HIGH_RISK\\n${locationText}`);
+    }
+  </script>
+</body>
+</html>

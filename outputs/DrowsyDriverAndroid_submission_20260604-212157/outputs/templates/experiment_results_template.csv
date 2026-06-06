@@ -1,4 +1,0 @@
-method,accuracy,precision_closed,recall_closed,f1_closed,fps,notes
-EAR/MAR threshold,TBD,TBD,TBD,TBD,TBD,Fast and interpretable baseline
-CNN eye classifier,TBD,TBD,TBD,TBD,TBD,Learns visual features from eye ROI
-Hybrid + smoothing,TBD,TBD,TBD,TBD,TBD,Final proposed pipeline

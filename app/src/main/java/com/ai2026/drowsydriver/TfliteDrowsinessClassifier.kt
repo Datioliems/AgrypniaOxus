@@ -102,7 +102,7 @@ class TfliteDrowsinessClassifier(context: Context) {
         val avg = FloatArray(LABELS.size) { summed[it] / count }
 
         // Log raw probabilities để debug (verbose → chỉ hiện khi cần)
-        Log.v(TAG, "CNN raw avg: eyes_closed=${avg[0]:.3f} eyes_open=${avg[1]:.3f}")
+        Log.v(TAG, "CNN raw avg: eyes_closed=${"%.3f".format(avg[0])} eyes_open=${"%.3f".format(avg[1])}")
 
         val pred = avg.toPrediction()
 

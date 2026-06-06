@@ -62,7 +62,7 @@ except Exception as e:
 # ─────────────────────────────────────────────────────────────
 ROBOFLOW_API_KEY  = "qI3lEKlNpIZpNENdk3MH"
 ROBOFLOW_WORKSPACE = "nguyen-tuan-dat"
-ROBOFLOW_PROJECT  = "drowsiness driver"
+ROBOFLOW_PROJECT  = "drowsiness-driver"   # slug dùng dấu - không phải dấu cách
 ROBOFLOW_VERSION  = 1
 
 # YOLO26 format — đây là format Roboflow export cho YOLO v2/v6 (Darknet-style)
@@ -82,92 +82,214 @@ print(f"  Epochs   : {EPOCHS}")
 print(f"  Batch    : {BATCH}")
 print(f"  IMGSZ    : {IMGSZ}")
 
-# %% [4] Download dataset từ Roboflow
-print("\n📥 Download Roboflow dataset (YOLO26 format)...")
-from roboflow import Roboflow
+# %% [4] Download dataset từ Roboflow — dùng HTTP API trực tiếp
+import requests, zipfile, io
 
-rf = Roboflow(api_key=ROBOFLOW_API_KEY)
-project = rf.workspace(ROBOFLOW_WORKSPACE).project(ROBOFLOW_PROJECT)
+def roboflow_download(workspace, project, version, fmt, dest: Path, api_key) -> Path:
+    """
+    Download dataset từ Roboflow qua HTTP API trực tiếp.
+    Tránh lỗi BadZipFile của Roboflow Python client.
 
-# Thử download YOLO26 format trước, fallback sang YOLOv8 nếu lỗi
-dataset_yolo26 = None
-yaml_path = None
+    Flow:
+      1. GET /workspace/project/version/format?api_key=...
+         → trả về JSON có trường "export.link" hoặc "link"
+      2. Download zip từ link đó
+      3. Giải nén vào dest
+    """
+    dest.mkdir(parents=True, exist_ok=True)
+
+    # Bước 1: lấy export info
+    api_url = f"https://api.roboflow.com/{workspace}/{project}/{version}/{fmt}"
+    print(f"   GET {api_url}")
+    r = requests.get(api_url, params={"api_key": api_key}, timeout=30)
+
+    if r.status_code != 200:
+        raise RuntimeError(f"API error {r.status_code}: {r.text[:300]}")
+
+    info = r.json()
+
+    # Tìm download link trong response
+    link = (info.get("export", {}).get("link")
+            or info.get("link")
+            or info.get("url"))
+
+    if not link:
+        # In toàn bộ response để debug
+        print("   API response:", json.dumps(info, indent=2)[:500])
+        raise RuntimeError(f"Không tìm thấy download link trong response")
+
+    print(f"   Download link: {link[:80]}...")
+
+    # Bước 2: download zip
+    r2 = requests.get(link, timeout=120, stream=True)
+    if r2.status_code != 200:
+        raise RuntimeError(f"Download error {r2.status_code}")
+
+    total = int(r2.headers.get("content-length", 0))
+    data  = b""
+    for chunk in r2.iter_content(chunk_size=8192):
+        data += chunk
+    print(f"   Downloaded: {len(data)/1024:.1f} KB")
+
+    if len(data) < 100:
+        raise RuntimeError(f"File quá nhỏ ({len(data)} bytes) — không phải zip hợp lệ")
+
+    # Bước 3: giải nén
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+        zf.extractall(dest)
+        names = zf.namelist()
+    print(f"   Extracted {len(names)} files → {dest}")
+    return dest
+
+
+def find_yaml(folder: Path) -> Path | None:
+    """Tìm data.yaml hoặc obj.data trong thư mục vừa giải nén"""
+    for pattern in ["*.yaml", "*.data", "**/data.yaml", "**/obj.data"]:
+        found = list(folder.glob(pattern))
+        if found:
+            return found[0]
+    return None
+
+
+# ── Chẩn đoán: xem project có gì ─────────────────────────────
+print("🔍 Kiểm tra Roboflow project...")
+r_check = requests.get(
+    f"https://api.roboflow.com/{ROBOFLOW_WORKSPACE}/{ROBOFLOW_PROJECT}",
+    params={"api_key": ROBOFLOW_API_KEY}, timeout=15
+)
+if r_check.status_code == 200:
+    proj_info = r_check.json()
+    proj = proj_info.get("project", {})
+    print(f"   Project : {proj.get('name', '?')}")
+    print(f"   Images  : {proj.get('images', '?')}")
+    versions = proj_info.get("versions", [])
+    print(f"   Versions: {len(versions)}")
+    for v in versions:
+        print(f"     v{v.get('id','?')}: {v.get('images','?')} images  "
+              f"splits={v.get('splits', {})}")
+else:
+    print(f"   ⚠️  Không lấy được info: {r_check.status_code}")
+    print(f"   {r_check.text[:200]}")
+
+# ── Download YOLOv8 format ─────────────────────────────────────
+print(f"\n📥 Download YOLOv8 dataset (v{ROBOFLOW_VERSION})...")
+yaml_path_v8 = None
 
 try:
-    dataset_yolo26 = project.version(ROBOFLOW_VERSION).download(
-        "yolo26",
-        location="/content/dataset_yolo26",
-        overwrite=True,
+    dest_v8 = Path("/content/dataset_yolov8")
+    roboflow_download(
+        ROBOFLOW_WORKSPACE, ROBOFLOW_PROJECT,
+        ROBOFLOW_VERSION, "yolov8",
+        dest_v8, ROBOFLOW_API_KEY
     )
-    print(f"✅ YOLO26 dataset downloaded: {dataset_yolo26.location}")
-    dataset_location = Path(dataset_yolo26.location)
-
-    # YOLO26 có thể dùng obj.data thay vì data.yaml
-    yaml_candidates = list(dataset_location.glob("*.yaml")) + \
-                      list(dataset_location.glob("*.data")) + \
-                      list(dataset_location.glob("obj.data"))
-    if yaml_candidates:
-        yaml_path = yaml_candidates[0]
-        print(f"   Config file: {yaml_path}")
+    yaml_path_v8 = find_yaml(dest_v8)
+    if yaml_path_v8:
+        print(f"✅ data.yaml: {yaml_path_v8}")
     else:
-        print("⚠️  Không tìm thấy config file trong YOLO26 format")
+        raise RuntimeError("Không tìm thấy data.yaml sau khi giải nén")
 
 except Exception as e:
-    print(f"⚠️  YOLO26 download failed: {e}")
-    print("   → Fallback sang YOLOv8 format (compare format khác nhau)")
-    DATASET_FORMAT = "yolov8_fallback"
-
-# Download YOLOv8 format (luôn cần để train với Ultralytics)
-print("\n📥 Download YOLOv8 format (cho Ultralytics training)...")
-dataset_v8 = project.version(ROBOFLOW_VERSION).download(
-    "yolov8",
-    location="/content/dataset_yolov8",
-    overwrite=True,
-)
-print(f"✅ YOLOv8 dataset: {dataset_v8.location}")
-yaml_path_v8 = Path(dataset_v8.location) / "data.yaml"
-print(f"   data.yaml: {yaml_path_v8}")
+    print(f"\n❌ Download thất bại: {e}")
+    print("""
+╔══════════════════════════════════════════════════════╗
+║  NGUYÊN NHÂN THƯỜNG GẶP:                            ║
+║                                                      ║
+║  1. Project chưa có ảnh (0 images)                  ║
+║     → Upload ảnh lên roboflow.com trước             ║
+║                                                      ║
+║  2. Version chưa được Generate/Export               ║
+║     → roboflow.com → project → Versions             ║
+║       → Generate New Version → Export → YOLOv8      ║
+║                                                      ║
+║  3. Dùng public dataset thay thế (xem cell dưới)    ║
+╚══════════════════════════════════════════════════════╝
+""")
+    # ── FALLBACK: Dùng public dataset từ Roboflow Universe ──────
+    print("⬇️  Thử dùng public drowsiness dataset thay thế...")
+    try:
+        from roboflow import Roboflow
+        rf_pub = Roboflow(api_key=ROBOFLOW_API_KEY)
+        # Dataset công khai về drowsiness detection
+        pub = rf_pub.workspace("murtazahussain-x7gvk")\
+                    .project("drowsiness-detection-ewbtq")\
+                    .version(3)\
+                    .download("yolov8", location="/content/dataset_yolov8", overwrite=True)
+        yaml_path_v8 = Path(pub.location) / "data.yaml"
+        print(f"✅ Public dataset: {yaml_path_v8}")
+    except Exception as e2:
+        print(f"⚠️  Public dataset cũng lỗi: {e2}")
+        print("   → Tạo dataset giả để test pipeline, thay dataset thật sau")
+        yaml_path_v8 = None
 
 # %% [5] Khám phá dataset
-print("\n📊 Dataset overview:")
-dataset_v8_path = Path(dataset_v8.location)
-
 import yaml
-with open(yaml_path_v8) as f:
-    cfg = yaml.safe_load(f)
 
-print(f"  Classes ({cfg['nc']}): {cfg['names']}")
-for split in ["train", "val", "test"]:
-    split_path = dataset_v8_path / split / "images"
-    if split_path.exists():
-        n = len(list(split_path.glob("*.jpg")) + list(split_path.glob("*.png")))
-        print(f"  {split:5s}: {n:5d} images")
+# Luôn khởi tạo biến — tránh NameError ở các cell sau
+dataset_v8_path = None
+cfg = {"nc": 0, "names": []}
+
+if yaml_path_v8 is None or not Path(yaml_path_v8).exists():
+    print("⚠️  Chưa có dataset — kiểm tra lại cell [4]")
+else:
+    dataset_v8_path = Path(yaml_path_v8).parent
+    print(f"\n📊 Dataset overview:")
+    print(f"   Path: {dataset_v8_path}")
+
+    with open(yaml_path_v8) as f:
+        cfg = yaml.safe_load(f)
+
+    print(f"   Classes ({cfg['nc']}): {cfg['names']}")
+    for split in ["train", "val", "test"]:
+        split_path = dataset_v8_path / split / "images"
+        if split_path.exists():
+            n = len(list(split_path.glob("*.jpg")) + list(split_path.glob("*.png")))
+            print(f"   {split:5s}: {n:5d} images")
+        else:
+            print(f"   {split:5s}: (không tìm thấy)")
+    print("✅ Dataset sẵn sàng")
 
 # %% [6] Visualize mẫu từ dataset
 print("\n🖼️  Hiển thị mẫu dataset...")
-train_imgs = list((dataset_v8_path / "train" / "images").glob("*.jpg"))[:6]
-if len(train_imgs) < 6:
-    train_imgs += list((dataset_v8_path / "train" / "images").glob("*.png"))
-train_imgs = train_imgs[:6]
 
-if train_imgs:
-    fig, axes = plt.subplots(2, 3, figsize=(12, 8))
-    for ax, img_path in zip(axes.flat, train_imgs):
-        img = mpimg.imread(img_path)
-        ax.imshow(img)
-        ax.set_title(img_path.stem[:20], fontsize=8)
-        ax.axis("off")
-    plt.suptitle("Mẫu Dataset — Drowsiness Driver (Roboflow)", fontsize=12)
-    plt.tight_layout()
-    plt.savefig(str(OUTPUT_DIR / "dataset_samples.png"), dpi=120)
-    plt.show()
-    print(f"✅ Saved: {OUTPUT_DIR}/dataset_samples.png")
+if dataset_v8_path is None:
+    print("⚠️  Bỏ qua — chưa có dataset_v8_path (cell [4] hoặc [5] chưa thành công)")
+else:
+    train_img_dir = dataset_v8_path / "train" / "images"
+    train_imgs = []
+    if train_img_dir.exists():
+        train_imgs  = list(train_img_dir.glob("*.jpg"))[:6]
+        train_imgs += list(train_img_dir.glob("*.png"))[:max(0, 6-len(train_imgs))]
+        train_imgs  = train_imgs[:6]
+
+    if not train_imgs:
+        print(f"⚠️  Không tìm thấy ảnh trong {train_img_dir}")
+    else:
+        fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+        for ax, img_path in zip(axes.flat, train_imgs):
+            img = mpimg.imread(str(img_path))
+            ax.imshow(img)
+            ax.set_title(img_path.stem[:20], fontsize=8)
+            ax.axis("off")
+        # Tắt các ô thừa nếu ít hơn 6 ảnh
+        for ax in axes.flat[len(train_imgs):]:
+            ax.axis("off")
+        plt.suptitle("Mẫu Dataset — Drowsiness Driver (Roboflow)", fontsize=12)
+        plt.tight_layout()
+        plt.savefig(str(OUTPUT_DIR / "dataset_samples.png"), dpi=120)
+        plt.show()
+        print(f"✅ Saved: {OUTPUT_DIR}/dataset_samples.png")
 
 # %% [7] Train với YOLOv8 + Ultralytics
-# Colab T4: dùng yolov8s (larger model so sánh được với yolov8n local)
+if yaml_path_v8 is None or not Path(yaml_path_v8).exists():
+    raise RuntimeError(
+        "yaml_path_v8 chưa được set!\n"
+        "Quay lại cell [4] — download dataset thành công trước khi train."
+    )
+
 print(f"\n{'='*60}")
-print(f"🏋️  TRAINING: {MODEL_BASE} (YOLO26-equivalent so sánh)")
+print(f"TRAINING: {MODEL_BASE} (YOLO26-equivalent so sánh)")
 print(f"   T4 GPU, batch={BATCH}, epochs={EPOCHS}")
+print(f"   data: {yaml_path_v8}")
 print(f"{'='*60}")
 
 from ultralytics import YOLO

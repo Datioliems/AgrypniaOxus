@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Drowsy Guard">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="iPhone PWA for driver drowsiness monitoring with MediaPipe EAR/MAR, alerts, dashboard, and trusted-contact safety flow.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css?v=7">
+  <title>Drowsy Guard iPhone PWA</title>
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">iPhone Safari/PWA</p>
+      <h1>Drowsy Guard</h1>
+      <p class="subtitle">Theo dõi dấu hiệu buồn ngủ bằng camera iPhone, EAR/MAR MediaPipe, cảnh báo âm thanh và chia sẻ vị trí khi nguy hiểm.</p>
+    </div>
+    <div class="header-badge">
+      <span>Mode</span>
+      <strong id="runMode">PWA ready</strong>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="primary-column">
+      <article class="panel camera-panel">
+        <div class="panel-title-row">
+          <div>
+            <h2>Camera Realtime</h2>
+            <p>Chạy tốt nhất qua HTTPS/ngrok. Nếu Safari chặn realtime camera, dùng snapshot fallback.</p>
+          </div>
+          <span id="secureBadge" class="badge">checking</span>
+        </div>
+
+        <div class="camera-box">
+          <video id="video" playsinline muted autoplay></video>
+          <img id="snapshot" class="snapshot" alt="Snapshot preview" hidden>
+          <canvas id="overlayCanvas" aria-label="Face landmark overlay"></canvas>
+          <div class="status-overlay">
+            <div class="status-line">
+              <span id="stateDot" class="state-dot"></span>
+              <span id="stateText">Camera pending</span>
+            </div>
+            <p id="stateDetail">Bấm mở camera để khởi động phân tích.</p>
+            <div class="overlay-metrics">
+              <span>EAR <strong id="earValue">--</strong></span>
+              <span>MAR <strong id="marValue">--</strong></span>
+              <span>FPS <strong id="fpsValue">--</strong></span>
+              <span>LAT <strong id="latencyValue">--</strong></span>
+            </div>
+            <div class="cnn-readout">
+              <span>CNN Eye</span>
+              <strong id="cnnEyeValue">pending</strong>
+              <em id="cnnConfidenceValue">--</em>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-grid">
+          <button id="cameraButton" type="button">Mở camera</button>
+          <button id="stopCameraButton" class="secondary" type="button">Tắt camera</button>
+          <label class="button secondary" for="snapshotInput">Chụp ảnh fallback</label>
+          <input id="snapshotInput" type="file" accept="image/*" capture="user" hidden>
+        </div>
+
+        <div class="action-grid compact">
+          <button id="awakeButton" class="secondary" type="button">Awake</button>
+          <button id="warningButton" class="warning" type="button">Warning</button>
+          <button id="dangerButton" class="danger" type="button">Danger</button>
+          <button id="loadAiButton" class="secondary" type="button">Tải MediaPipe</button>
+          <button id="loadCnnButton" class="secondary" type="button">Tải CNN</button>
+        </div>
+
+        <p id="cameraHelp" class="note">Realtime camera trên iPhone Safari cần HTTPS. Ngrok/Vercel/Netlify đều được. HTTP LAN chỉ nên dùng để xem giao diện hoặc chụp snapshot fallback.</p>
+      </article>
+
+      <article class="panel">
+        <h2>Cảnh báo âm thanh</h2>
+        <div id="soundStatus" class="sound-status off">
+          <strong>Sound Off</strong>
+          <span>iPhone yêu cầu bấm bật âm thanh một lần trước khi app được phát cảnh báo.</span>
+        </div>
+        <div class="table-like">
+          <div class="row"><strong>Cấp 1</strong><span>Beep ngắn khi mắt nhắm vượt ngưỡng ngắn.</span></div>
+          <div class="row"><strong>Cấp 2</strong><span>Âm xen kẽ 1000/2500 Hz và ghi log warning.</span></div>
+          <div class="row"><strong>Cấp 3</strong><span>Yêu cầu dừng xe, có thể chia sẻ vị trí cho liên hệ tin cậy.</span></div>
+        </div>
+        <div class="action-grid compact">
+          <button id="enableSoundButton" type="button">Bật âm thanh</button>
+          <button id="muteSoundButton" class="secondary" type="button">Tắt âm thanh</button>
+          <button id="beepButton" class="secondary" type="button">Beep</button>
+          <button id="arousalButton" class="warning" type="button">Nền 1750 Hz</button>
+          <button id="stopArousalButton" class="secondary" type="button">Dừng nền</button>
+        </div>
+        <p id="arousalText" class="note">Âm nền chỉ chạy tối đa 30 giây trong demo. Nếu vẫn buồn ngủ, hệ thống phải khuyến nghị dừng xe.</p>
+      </article>
+
+      <article class="panel">
+        <h2>Dashboard theo thời gian</h2>
+        <div id="hourChart" class="hour-chart" aria-label="Drowsiness events by hour"></div>
+        <div class="legend">
+          <span><i class="legend-dot low"></i>Thấp</span>
+          <span><i class="legend-dot mid"></i>Trung bình</span>
+          <span><i class="legend-dot high"></i>Cao</span>
+          <span><i class="legend-dot danger"></i>Nguy hiểm</span>
+        </div>
+      </article>
+    </section>
+
+    <aside class="side-column">
+      <article class="panel">
+        <h2>Risk Snapshot</h2>
+        <div class="metrics-grid">
+          <div class="metric-card"><small>Risk</small><strong id="riskScore">18</strong></div>
+          <div class="metric-card"><small>Alerts</small><strong id="alertCount">0</strong></div>
+          <div class="metric-card"><small>Closed</small><strong id="closedTime">0.0s</strong></div>
+          <div class="metric-card"><small>Yawn</small><strong id="yawnTime">0.0s</strong></div>
+        </div>
+        <p id="recommendation" class="recommendation">Trạng thái ổn. Khi cảnh báo lặp lại, hãy dừng xe tại nơi an toàn.</p>
+      </article>
+
+      <article class="panel">
+        <h2>Cấu hình ngưỡng</h2>
+        <label class="control">
+          <span>EAR threshold</span>
+          <input id="earThreshold" type="range" min="0.14" max="0.30" step="0.01" value="0.21">
+          <strong id="earThresholdValue">0.21</strong>
+        </label>
+        <label class="control">
+          <span>MAR threshold</span>
+          <input id="marThreshold" type="range" min="0.35" max="0.75" step="0.01" value="0.58">
+          <strong id="marThresholdValue">0.58</strong>
+        </label>
+        <label class="control">
+          <span>Drowsy duration</span>
+          <input id="drowsyDuration" type="range" min="800" max="3000" step="100" value="1600">
+          <strong id="drowsyDurationValue">1600ms</strong>
+        </label>
+      </article>
+
+      <article class="panel">
+        <h2>Liên hệ tin cậy</h2>
+        <label class="field">
+          <span>Tên/số điện thoại</span>
+          <input id="trustedContact" value="Nguoi than / so dien thoai" autocomplete="off">
+        </label>
+        <div class="action-grid">
+          <button id="locationButton" type="button">Lấy vị trí</button>
+          <button id="shareButton" class="danger" type="button">Gửi cảnh báo</button>
+        </div>
+        <p id="locationText" class="note-box">Chưa có vị trí.</p>
+      </article>
+
+      <article class="panel">
+        <h2>Event Log</h2>
+        <div class="action-grid compact">
+          <button id="exportButton" class="secondary" type="button">Xuất CSV</button>
+          <button id="clearLogButton" class="secondary" type="button">Xóa log</button>
+        </div>
+        <div id="events" class="event-list"></div>
+      </article>
+
+      <article class="panel">
+        <h2>Cài lên iPhone</h2>
+        <ol class="steps">
+          <li>Mở link HTTPS ngrok trên Safari.</li>
+          <li>Bấm Share.</li>
+          <li>Chọn Add to Home Screen.</li>
+          <li>Mở biểu tượng Drowsy Guard ngoài màn hình chính.</li>
+        </ol>
+      </article>
+    </aside>
+  </main>
+
+  <script type="module" src="app.js?v=7"></script>
+</body>
+</html>

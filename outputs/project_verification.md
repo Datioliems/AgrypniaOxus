@@ -1,7 +1,7 @@
 # Project Verification
 
 Required artifacts: PASS
-Optional runtime evidence: 6/7
+Optional runtime evidence: 7/7
 
 ## Required Artifacts
 
@@ -9,14 +9,14 @@ Optional runtime evidence: 6/7
 |---|---|---|---:|
 | Android Gradle settings | `settings.gradle` | Present | 338 |
 | Android root build file | `build.gradle` | Present | 140 |
-| Android app build file | `app/build.gradle` | Present | 982 |
-| Android manifest | `app/src/main/AndroidManifest.xml` | Present | 876 |
-| MainActivity | `app/src/main/java/com/ai2026/drowsydriver/MainActivity.kt` | Present | 9488 |
+| Android app build file | `app/build.gradle` | Present | 1302 |
+| Android manifest | `app/src/main/AndroidManifest.xml` | Present | 1043 |
+| MainActivity | `app/src/main/java/com/ai2026/drowsydriver/MainActivity.kt` | Present | 16923 |
 | DrowsinessAnalyzer | `app/src/main/java/com/ai2026/drowsydriver/DrowsinessAnalyzer.kt` | Present | 3775 |
-| TFLite classifier | `app/src/main/java/com/ai2026/drowsydriver/TfliteDrowsinessClassifier.kt` | Present | 2159 |
-| Event logger | `app/src/main/java/com/ai2026/drowsydriver/EventLogger.kt` | Present | 1654 |
+| TFLite classifier | `app/src/main/java/com/ai2026/drowsydriver/TfliteDrowsinessClassifier.kt` | Present | 7012 |
+| Event logger | `app/src/main/java/com/ai2026/drowsydriver/EventLogger.kt` | Present | 1751 |
 | MediaPipe model asset | `app/src/main/assets/face_landmarker.task` | Present | 3758596 |
-| README | `README.md` | Present | 7864 |
+| README | `README.md` | Present | 8983 |
 | 4-day plan | `docs/PLAN_4_NGAY.md` | Present | 2254 |
 | Rubric mapping | `docs/RUBRIC_MAPPING.md` | Present | 4109 |
 | Project status checklist | `docs/PROJECT_STATUS_AND_SUBMISSION_CHECKLIST.md` | Present | 3888 |
@@ -41,7 +41,7 @@ Optional runtime evidence: 6/7
 | Dataset summary script | `tools/summarize_dataset.py` | Present | 3375 |
 | Dataset preparation script | `tools/prepare_eye_dataset.py` | Present | 2865 |
 | Dataset EDA script | `tools/eda_eye_dataset.py` | Present | 7424 |
-| Training script | `tools/train_eye_classifier.py` | Present | 4406 |
+| Training script | `tools/train_eye_classifier.py` | Present | 13081 |
 | Evaluation script | `tools/evaluate_eye_classifier.py` | Present | 6127 |
 | Model result plotting script | `tools/plot_model_results.py` | Present | 3153 |
 | Android env check script | `tools/check_android_env.ps1` | Present | 2287 |
@@ -63,4 +63,4 @@ These require Android Studio/device run or trained model outputs.
 | Training history JSON | `outputs/training/training_history.json` | Present | 2592 |
 | Evaluation metrics JSON | `outputs/evaluation/metrics.json` | Present | 525 |
 | Evaluation confusion matrix | `outputs/evaluation/confusion_matrix.csv` | Present | 82 |
-| Android debug APK | `app/build/outputs/apk/debug/app-debug.apk` | Missing |  |
+| Android debug APK | `app/build/outputs/apk/debug/app-debug.apk` | Present | 71355313 |

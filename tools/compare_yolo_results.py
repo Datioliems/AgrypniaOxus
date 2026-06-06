@@ -47,7 +47,7 @@ def load_summary(path: Path) -> dict | None:
     try:
         return json.loads(path.read_text())
     except Exception as e:
-        print(f"⚠️  Cannot read {path}: {e}")
+        print(f"[!]  Cannot read {path}: {e}")
         return None
 
 
@@ -88,7 +88,7 @@ def load_from_csv(csv_path: Path, model_name: str, device: str) -> dict | None:
             "best_recall":    best_rec,
         }
     except Exception as e:
-        print(f"⚠️  Cannot parse CSV {csv_path}: {e}")
+        print(f"[!]  Cannot parse CSV {csv_path}: {e}")
         return None
 
 
@@ -181,7 +181,7 @@ def make_bar_chart(summaries: list[dict], out_path: Path):
     ax.set_xticks(x)
     ax.set_xticklabels(labels, rotation=15, ha="right", fontsize=9)
     ax.set_ylabel("Score (%)", fontsize=11)
-    ax.set_title("🔍 So Sánh YOLOv8 (Local RTX 4050) vs YOLO26 (Colab T4)", fontsize=13)
+    ax.set_title("[SCAN] So Sánh YOLOv8 (Local RTX 4050) vs YOLO26 (Colab T4)", fontsize=13)
     ax.set_ylim(0, 115)
     ax.grid(True, axis="y", alpha=0.3)
     ax.legend(loc="upper right", fontsize=9)
@@ -198,7 +198,7 @@ def make_bar_chart(summaries: list[dict], out_path: Path):
     plt.tight_layout()
     plt.savefig(str(out_path), dpi=130, bbox_inches="tight")
     plt.show()
-    print(f"✅ Bar chart saved: {out_path}")
+    print(f"[OK] Bar chart saved: {out_path}")
 
 
 def print_winner(summaries: list[dict]):
@@ -207,7 +207,7 @@ def print_winner(summaries: list[dict]):
         return
 
     best = max(summaries, key=lambda s: s.get("best_map50", 0))
-    print(f"\n🏆 WINNER: {best.get('model','?')} [{best.get('device','?')}]")
+    print(f"\n[BEST] WINNER: {best.get('model','?')} [{best.get('device','?')}]")
     print(f"   mAP@50    : {best.get('best_map50', 0)*100:.2f}%")
     print(f"   mAP@50-95 : {best.get('best_map50_95', 0)*100:.2f}%")
     print(f"   Precision : {best.get('best_precision', 0)*100:.2f}%")
@@ -221,15 +221,15 @@ def print_winner(summaries: list[dict]):
 
     # Khuyến nghị
     map50 = best.get("best_map50", 0)
-    print("\n📱 Khuyến nghị cho Android:")
+    print("\n[Android] Khuyến nghị cho Android:")
     if map50 >= 0.85:
-        print("   ✅ Model đủ tốt cho production (mAP50 ≥ 85%)")
+        print("   [OK] Model đủ tốt cho production (mAP50 ≥ 85%)")
     elif map50 >= 0.70:
-        print("   ⚠️  Tạm dùng được, nên train thêm (mAP50 70-85%)")
+        print("   [!]  Tạm dùng được, nên train thêm (mAP50 70-85%)")
     else:
-        print("   ❌ Cần cải thiện thêm (mAP50 < 70%)")
+        print("   [X] Cần cải thiện thêm (mAP50 < 70%)")
 
-    print("\n💡 Lưu ý triển khai:")
+    print("\n[NOTE] Lưu ý triển khai:")
     print("   - YOLOv8 export TFLite: model.export(format='tflite', imgsz=320)")
     print("   - TFLite model ~ 3-10MB (tùy size)")
     print("   - Android real-time cần < 100ms/frame")
@@ -247,7 +247,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 60)
-    print("📊 YOLO COMPARISON REPORT")
+    print("[CHART] YOLO COMPARISON REPORT")
     print("=" * 60)
 
     summaries = []
@@ -256,7 +256,7 @@ def main():
         # Tự động tìm tất cả results
         found = scan_for_results(PROJECT_ROOT / "outputs")
         summaries.extend(found)
-        print(f"🔍 Auto-scan: tìm thấy {len(found)} run(s)")
+        print(f"[SCAN] Auto-scan: tìm thấy {len(found)} run(s)")
 
     else:
         # ── Local results ────────────────────────────────────────
@@ -266,7 +266,7 @@ def main():
                 s = load_summary(path)
                 if s:
                     summaries.append(s)
-                    print(f"   ✅ {path.name}: mAP50={s.get('best_map50',0)*100:.2f}%")
+                    print(f"   [OK] {path.name}: mAP50={s.get('best_map50',0)*100:.2f}%")
                 else:
                     # Fallback: tìm results.csv trong outputs/training_yolo/yolov8/
                     model_name = path.stem.replace("summary_", "")
@@ -276,10 +276,10 @@ def main():
                         s2  = load_from_csv(csv, model_name, "local_rtx4050")
                         if s2:
                             summaries.append(s2)
-                            print(f"   ✅ {model_name} (từ CSV): mAP50={s2.get('best_map50',0)*100:.2f}%")
+                            print(f"   [OK] {model_name} (từ CSV): mAP50={s2.get('best_map50',0)*100:.2f}%")
                             break
                     else:
-                        print(f"   ⏳ {path.name} chưa có (training chưa xong?)")
+                        print(f"   [...] {path.name} chưa có (training chưa xong?)")
 
         # ── Colab results ─────────────────────────────────────────
         if not args.only_local:
@@ -287,7 +287,7 @@ def main():
             s = load_summary(COLAB_SUMMARY)
             if s:
                 summaries.append(s)
-                print(f"   ✅ {COLAB_SUMMARY.name}: mAP50={s.get('best_map50',0)*100:.2f}%")
+                print(f"   [OK] {COLAB_SUMMARY.name}: mAP50={s.get('best_map50',0)*100:.2f}%")
             else:
                 colab_dir = PROJECT_ROOT / "outputs" / "training_yolo" / "yolo26"
                 found_csv = list(colab_dir.rglob("results.csv"))
@@ -295,13 +295,13 @@ def main():
                     s2 = load_from_csv(found_csv[0], "yolo26_colab", "colab_t4")
                     if s2:
                         summaries.append(s2)
-                        print(f"   ✅ YOLO26 (từ CSV): mAP50={s2.get('best_map50',0)*100:.2f}%")
+                        print(f"   [OK] YOLO26 (từ CSV): mAP50={s2.get('best_map50',0)*100:.2f}%")
                 else:
-                    print(f"   ⏳ {COLAB_SUMMARY.name} chưa có")
+                    print(f"   [...] {COLAB_SUMMARY.name} chưa có")
                     print(f"      → Download từ Colab và copy vào: {COLAB_SUMMARY.parent}")
 
     if not summaries:
-        print("\n⚠️  Chưa có kết quả nào!")
+        print("\n[!]  Chưa có kết quả nào!")
         print("   Đợi training xong rồi chạy lại script này.")
         print("\n   Checklist:")
         print("   □ Local RTX 4050: chạy tools/train_yolov8_local.py")
@@ -326,7 +326,7 @@ def main():
     # ── Lưu JSON tổng hợp ─────────────────────────────────────
     comparison_json = OUT_DIR / "yolo_comparison.json"
     comparison_json.write_text(json.dumps(summaries, indent=2))
-    print(f"\n✅ Full comparison saved: {comparison_json}")
+    print(f"\n[OK] Full comparison saved: {comparison_json}")
     print(f"   Chart: {chart_path}")
 
 

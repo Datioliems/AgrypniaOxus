@@ -13,3 +13,27 @@ Thumbs.db
 
 # Logs
 *.log
+error_log.txt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Training outputs (lon, khong commit)
+outputs/training_yolo/
+roboflow_data/
+*.pt
+*.tflite
+
+# Dataset (khong commit)
+dataset_mrl/
+dataset_yawn/
+rawdata/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/settings.json
