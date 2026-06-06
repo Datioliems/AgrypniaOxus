@@ -1,0 +1,11 @@
+source_path,source_label,recommended_label,image_count,note
+mrleyedataset\Close-Eyes,Close-Eyes,eyes_closed,41946,MRL raw class folder
+mrleyedataset\Open-Eyes,Open-Eyes,eyes_open,42952,MRL raw class folder
+rawdata\closed_eye,closed_eye,eyes_closed,24000,"Flattened class folder, likely subset/copy"
+rawdata\open_eye,open_eye,eyes_open,24000,"Flattened class folder, likely subset/copy"
+rawdata\data\train\awake,awake,eyes_open,25770,Pre-split MRL train
+rawdata\data\train\sleepy,sleepy,eyes_closed,25167,Pre-split MRL train
+rawdata\data\val\awake,awake,eyes_open,8591,Pre-split MRL validation
+rawdata\data\val\sleepy,sleepy,eyes_closed,8389,Pre-split MRL validation
+rawdata\data\test\awake,awake,eyes_open,8591,Pre-split MRL test
+rawdata\data\test\sleepy,sleepy,eyes_closed,8390,Pre-split MRL test

@@ -1,0 +1,261 @@
+{
+  "required": [
+    {
+      "label": "Android Gradle settings",
+      "path": "settings.gradle",
+      "exists": true,
+      "size": 338
+    },
+    {
+      "label": "Android root build file",
+      "path": "build.gradle",
+      "exists": true,
+      "size": 140
+    },
+    {
+      "label": "Android app build file",
+      "path": "app/build.gradle",
+      "exists": true,
+      "size": 982
+    },
+    {
+      "label": "Android manifest",
+      "path": "app/src/main/AndroidManifest.xml",
+      "exists": true,
+      "size": 876
+    },
+    {
+      "label": "MainActivity",
+      "path": "app/src/main/java/com/ai2026/drowsydriver/MainActivity.kt",
+      "exists": true,
+      "size": 9488
+    },
+    {
+      "label": "DrowsinessAnalyzer",
+      "path": "app/src/main/java/com/ai2026/drowsydriver/DrowsinessAnalyzer.kt",
+      "exists": true,
+      "size": 3775
+    },
+    {
+      "label": "TFLite classifier",
+      "path": "app/src/main/java/com/ai2026/drowsydriver/TfliteDrowsinessClassifier.kt",
+      "exists": true,
+      "size": 2159
+    },
+    {
+      "label": "Event logger",
+      "path": "app/src/main/java/com/ai2026/drowsydriver/EventLogger.kt",
+      "exists": true,
+      "size": 1654
+    },
+    {
+      "label": "MediaPipe model asset",
+      "path": "app/src/main/assets/face_landmarker.task",
+      "exists": true,
+      "size": 3758596
+    },
+    {
+      "label": "README",
+      "path": "README.md",
+      "exists": true,
+      "size": 7091
+    },
+    {
+      "label": "4-day plan",
+      "path": "docs/PLAN_4_NGAY.md",
+      "exists": true,
+      "size": 2254
+    },
+    {
+      "label": "Rubric mapping",
+      "path": "docs/RUBRIC_MAPPING.md",
+      "exists": true,
+      "size": 4109
+    },
+    {
+      "label": "Project status checklist",
+      "path": "docs/PROJECT_STATUS_AND_SUBMISSION_CHECKLIST.md",
+      "exists": true,
+      "size": 3888
+    },
+    {
+      "label": "Deployment/value doc",
+      "path": "docs/DEPLOYMENT_ARCHITECTURE_AND_VALUE.md",
+      "exists": true,
+      "size": 4361
+    },
+    {
+      "label": "Privacy/safety doc",
+      "path": "docs/PRIVACY_SAFETY_ETHICS.md",
+      "exists": true,
+      "size": 2277
+    },
+    {
+      "label": "AI model and deployment full guide",
+      "path": "docs/AI_MODEL_AND_DEPLOYMENT_FULL_GUIDE.md",
+      "exists": true,
+      "size": 9330
+    },
+    {
+      "label": "IS54A requirements coverage",
+      "path": "docs/IS54A_REQUIREMENTS_COVERAGE.md",
+      "exists": true,
+      "size": 5762
+    },
+    {
+      "label": "Streamlit and other deployment guide",
+      "path": "docs/STREAMLIT_AND_OTHER_DEPLOYMENT.md",
+      "exists": true,
+      "size": 4341
+    },
+    {
+      "label": "IS54A visual AI deployment roadmap",
+      "path": "docs/IS54A_VISUAL_AI_DEPLOYMENT_ROADMAP.html",
+      "exists": true,
+      "size": 16534
+    },
+    {
+      "label": "MediaPipe pipeline doc",
+      "path": "docs/MEDIAPIPE_LANDMARK_PIPELINE.md",
+      "exists": true,
+      "size": 3992
+    },
+    {
+      "label": "YOLO pipeline doc",
+      "path": "docs/YOLO_END_TO_END_PIPELINE.md",
+      "exists": true,
+      "size": 4323
+    },
+    {
+      "label": "MediaPipe vs YOLO comparison doc",
+      "path": "docs/MEDIAPIPE_VS_YOLO_COMPARISON.md",
+      "exists": true,
+      "size": 4642
+    },
+    {
+      "label": "Pipeline docs HTML",
+      "path": "docs/PIPELINE_DOCS_COMPARISON.html",
+      "exists": true,
+      "size": 3490
+    },
+    {
+      "label": "Pipeline docs screenshot",
+      "path": "output/playwright/pipeline-docs-comparison.png",
+      "exists": true,
+      "size": 62539
+    },
+    {
+      "label": "IS54A visual roadmap screenshot",
+      "path": "output/playwright/is54a-visual-roadmap.png",
+      "exists": true,
+      "size": 266363
+    },
+    {
+      "label": "Presentation script",
+      "path": "docs/PRESENTATION_8_MIN_SCRIPT.md",
+      "exists": true,
+      "size": 5267
+    },
+    {
+      "label": "Demo day checklist",
+      "path": "docs/DEMO_DAY_CHECKLIST.md",
+      "exists": true,
+      "size": 1464
+    },
+    {
+      "label": "Draft Word report",
+      "path": "outputs/Bao_cao_nhap_DrowsyDriverAndroid.docx",
+      "exists": true,
+      "size": 12132
+    },
+    {
+      "label": "Playwright latest screenshot",
+      "path": "output/playwright/project-plan-latest.png",
+      "exists": true,
+      "size": 114780
+    },
+    {
+      "label": "Dataset summary script",
+      "path": "tools/summarize_dataset.py",
+      "exists": true,
+      "size": 3375
+    },
+    {
+      "label": "Training script",
+      "path": "tools/train_eye_classifier.py",
+      "exists": true,
+      "size": 2702
+    },
+    {
+      "label": "Evaluation script",
+      "path": "tools/evaluate_eye_classifier.py",
+      "exists": true,
+      "size": 6127
+    },
+    {
+      "label": "Android env check script",
+      "path": "tools/check_android_env.ps1",
+      "exists": true,
+      "size": 2287
+    },
+    {
+      "label": "Android build helper",
+      "path": "tools/build_android.ps1",
+      "exists": true,
+      "size": 660
+    },
+    {
+      "label": "Submission package script",
+      "path": "tools/package_submission.ps1",
+      "exists": true,
+      "size": 2162
+    },
+    {
+      "label": "Streamlit fallback app",
+      "path": "streamlit_app.py",
+      "exists": true,
+      "size": 3512
+    },
+    {
+      "label": "Streamlit requirements",
+      "path": "requirements-streamlit.txt",
+      "exists": true,
+      "size": 41
+    }
+  ],
+  "optional_runtime_evidence": [
+    {
+      "label": "Trained CNN model",
+      "path": "app/src/main/assets/drowsiness_model.tflite",
+      "exists": false,
+      "size": null
+    },
+    {
+      "label": "Dataset summary JSON",
+      "path": "outputs/dataset_summary/dataset_summary.json",
+      "exists": false,
+      "size": null
+    },
+    {
+      "label": "Evaluation metrics JSON",
+      "path": "outputs/evaluation/metrics.json",
+      "exists": false,
+      "size": null
+    },
+    {
+      "label": "Evaluation confusion matrix",
+      "path": "outputs/evaluation/confusion_matrix.csv",
+      "exists": false,
+      "size": null
+    },
+    {
+      "label": "Android debug APK",
+      "path": "app/build/outputs/apk/debug/app-debug.apk",
+      "exists": false,
+      "size": null
+    }
+  ],
+  "required_passed": true,
+  "optional_present_count": 0,
+  "optional_total": 5
+}

@@ -1,0 +1,15 @@
+.gradle/
+build/
+app/build/
+
+# Local Android/IDE configuration
+local.properties
+.idea/
+*.iml
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

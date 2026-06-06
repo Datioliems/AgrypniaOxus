@@ -1,0 +1,7 @@
+## Copy this file to local.properties if Android Studio does not create it.
+## Use double backslashes or forward slashes on Windows.
+##
+## Example:
+## sdk.dir=C\:\\Users\\ADMIN\\AppData\\Local\\Android\\Sdk
+##
+sdk.dir=C\:\\Users\\ADMIN\\AppData\\Local\\Android\\Sdk

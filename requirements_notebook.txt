@@ -1,0 +1,23 @@
+# ──────────────────────────────────────────────
+# Requirements cho notebook_full_pipeline.py
+# Cài bằng lệnh:
+#   pip install -r requirements_notebook.txt
+# ──────────────────────────────────────────────
+
+# Deep Learning
+tensorflow>=2.15.0
+
+# Computer Vision / MediaPipe
+mediapipe>=0.10.14
+opencv-python>=4.9.0
+
+# Data & Visualization
+numpy>=1.26.0
+pandas>=2.1.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+scikit-learn>=1.4.0
+pillow>=10.0.0
+
+# Interactive Demo
+gradio>=4.20.0

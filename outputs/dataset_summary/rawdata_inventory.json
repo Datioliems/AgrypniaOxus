@@ -1,0 +1,72 @@
+[
+  {
+    "source_path": "mrleyedataset\\Close-Eyes",
+    "source_label": "Close-Eyes",
+    "recommended_label": "eyes_closed",
+    "image_count": 41946,
+    "note": "MRL raw class folder"
+  },
+  {
+    "source_path": "mrleyedataset\\Open-Eyes",
+    "source_label": "Open-Eyes",
+    "recommended_label": "eyes_open",
+    "image_count": 42952,
+    "note": "MRL raw class folder"
+  },
+  {
+    "source_path": "rawdata\\closed_eye",
+    "source_label": "closed_eye",
+    "recommended_label": "eyes_closed",
+    "image_count": 24000,
+    "note": "Flattened class folder, likely subset/copy"
+  },
+  {
+    "source_path": "rawdata\\open_eye",
+    "source_label": "open_eye",
+    "recommended_label": "eyes_open",
+    "image_count": 24000,
+    "note": "Flattened class folder, likely subset/copy"
+  },
+  {
+    "source_path": "rawdata\\data\\train\\awake",
+    "source_label": "awake",
+    "recommended_label": "eyes_open",
+    "image_count": 25770,
+    "note": "Pre-split MRL train"
+  },
+  {
+    "source_path": "rawdata\\data\\train\\sleepy",
+    "source_label": "sleepy",
+    "recommended_label": "eyes_closed",
+    "image_count": 25167,
+    "note": "Pre-split MRL train"
+  },
+  {
+    "source_path": "rawdata\\data\\val\\awake",
+    "source_label": "awake",
+    "recommended_label": "eyes_open",
+    "image_count": 8591,
+    "note": "Pre-split MRL validation"
+  },
+  {
+    "source_path": "rawdata\\data\\val\\sleepy",
+    "source_label": "sleepy",
+    "recommended_label": "eyes_closed",
+    "image_count": 8389,
+    "note": "Pre-split MRL validation"
+  },
+  {
+    "source_path": "rawdata\\data\\test\\awake",
+    "source_label": "awake",
+    "recommended_label": "eyes_open",
+    "image_count": 8591,
+    "note": "Pre-split MRL test"
+  },
+  {
+    "source_path": "rawdata\\data\\test\\sleepy",
+    "source_label": "sleepy",
+    "recommended_label": "eyes_closed",
+    "image_count": 8390,
+    "note": "Pre-split MRL test"
+  }
+]

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>MediaPipe vs YOLO Pipeline Docs</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f7f9fc; color: #172033; }
+    header { background: #0b0f14; color: white; padding: 32px 42px; }
+    h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: 0; }
+    header p { margin: 0; color: #dbe2ec; max-width: 920px; line-height: 1.5; }
+    main { max-width: 1120px; margin: 0 auto; padding: 26px 20px 44px; }
+    section { background: white; border: 1px solid #d8dee8; border-radius: 8px; padding: 22px; margin-bottom: 18px; }
+    h2 { margin: 0 0 14px; font-size: 22px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid #d8dee8; padding: 10px; text-align: left; vertical-align: top; }
+    th { background: #edf3ff; }
+    a { color: #1b6ef3; font-weight: 700; text-decoration: none; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .card { border: 1px solid #d8dee8; border-radius: 8px; padding: 16px; background: #fbfcfe; }
+    .tag { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; background: #dcfce7; color: #166534; }
+    .risk { background: #fef3c7; color: #92400e; }
+    @media (max-width: 860px) { header { padding: 24px 20px; } .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MediaPipe vs YOLO Pipeline Docs</h1>
+    <p>Ba tai lieu giup quyet dinh huong trien khai drowsiness detection: MediaPipe landmark, YOLO end-to-end, va so sanh/hybrid.</p>
+  </header>
+  <main>
+    <section>
+      <h2>Documents</h2>
+      <div class="grid">
+        <div class="card">
+          <span class="tag">Recommended</span>
+          <h3>MediaPipe Landmark Pipeline</h3>
+          <p>CameraX -> Face Landmarker -> EAR/MAR -> eye ROI -> CNN/TFLite -> smoothing -> alert.</p>
+          <a href="MEDIAPIPE_LANDMARK_PIPELINE.md">Open document</a>
+        </div>
+        <div class="card">
+          <span class="tag risk">Higher risk</span>
+          <h3>YOLO End-To-End Pipeline</h3>
+          <p>Camera frame -> YOLO detect open_eye, closed_eye, yawning -> smoothing -> alert.</p>
+          <a href="YOLO_END_TO_END_PIPELINE.md">Open document</a>
+        </div>
+        <div class="card">
+          <span class="tag">Decision aid</span>
+          <h3>MediaPipe vs YOLO Comparison</h3>
+          <p>Compares dataset, Android deployment risk, Streamlit fallback, rubric mapping, and recommendation.</p>
+          <a href="MEDIAPIPE_VS_YOLO_COMPARISON.md">Open document</a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Decision Summary</h2>
+      <table>
+        <tr><th>Scenario</th><th>Recommended path</th><th>Reason</th></tr>
+        <tr><td>Need highest chance of finishing in 4 days</td><td>MediaPipe + CNN</td><td>Already aligned with Android prototype and does not need bounding-box labels.</td></tr>
+        <tr><td>Need object detection research</td><td>YOLO end-to-end</td><td>Detects open_eye, closed_eye and yawning directly, but needs YOLO labels.</td></tr>
+        <tr><td>Need strong report with low risk</td><td>MediaPipe + CNN main, YOLO as extension</td><td>Clear pretrained/custom model split and easier Q&A.</td></tr>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

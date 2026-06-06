@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drowsy Driver Android Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #5d697c;
+      --line: #d8dee8;
+      --blue: #1b6ef3;
+      --green: #15803d;
+      --amber: #b45309;
+      --red: #b91c1c;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+    header {
+      background: #0b0f14;
+      color: white;
+      padding: 34px 42px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      letter-spacing: 0;
+    }
+    header p {
+      max-width: 900px;
+      margin: 0;
+      color: #dbe2ec;
+      font-size: 17px;
+    }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .day {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcfe;
+      min-height: 210px;
+    }
+    .day strong {
+      display: block;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+    ul { padding-left: 20px; margin: 8px 0 0; }
+    li { margin-bottom: 6px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: #edf3ff; }
+    .status {
+      display: inline-block;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .must { background: #fee2e2; color: var(--red); }
+    .done { background: #dcfce7; color: var(--green); }
+    .next { background: #fef3c7; color: var(--amber); }
+    @media (max-width: 860px) {
+      header { padding: 26px 22px; }
+      h1 { font-size: 27px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Drowsy Driver Android Prototype</h1>
+    <p>Phuong an 4 ngay: Android phone lam camera va thiet bi xu ly bien, MediaPipe trich landmark, CNN/TFLite phan loai, smoothing theo thoi gian de canh bao.</p>
+  </header>
+  <main>
+    <section>
+      <h2>San pham cuoi cung</h2>
+      <table>
+        <tr><th>Thanh phan</th><th>Mo ta</th><th>Trang thai</th></tr>
+        <tr><td>Android native app</td><td>CameraX preview, MediaPipe Face Landmarker, EAR/MAR, canh bao rung/am thanh.</td><td><span class="status done">Da co ban tam</span></td></tr>
+        <tr><td>CNN/TFLite</td><td>Da co classifier, crop eye ROI tu landmark; can train `drowsiness_model.tflite`.</td><td><span class="status next">Can train</span></td></tr>
+        <tr><td>Bao cao</td><td>Da co Markdown va Word draft; can dien so lieu dataset/metrics that.</td><td><span class="status done">Da co draft</span></td></tr>
+        <tr><td>Video demo</td><td>Quay lai app chay tren dien thoai de phong loi luc thuyet trinh.</td><td><span class="status must">Bat buoc</span></td></tr>
+        <tr><td>Submission zip</td><td>Da co script dong goi va zip tam trong outputs.</td><td><span class="status done">Da co</span></td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Timeline 4 ngay</h2>
+      <div class="grid">
+        <div class="day"><strong>Ngay 1</strong><ul><li>Tai dataset de dung.</li><li>Chay Android camera + MediaPipe.</li><li>Quay du lieu bo sung bang phone.</li><li>Demo EAR/MAR baseline.</li></ul></div>
+        <div class="day"><strong>Ngay 2</strong><ul><li>Cat ROI mat/mieng.</li><li>Train CNN nhe.</li><li>Danh gia bang confusion matrix.</li><li>Export TFLite.</li></ul></div>
+        <div class="day"><strong>Ngay 3</strong><ul><li>Dat model vao Android assets.</li><li>Tune nguong va smoothing.</li><li>Them canh bao va log FPS.</li><li>Quay demo.</li></ul></div>
+        <div class="day"><strong>Ngay 4</strong><ul><li>Viet bao cao theo template.</li><li>Hoan thien bang ket qua.</li><li>Chuan bi Q&A.</li><li>Backup source/demo.</li></ul></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Khoang trong nghien cuu</h2>
+      <table>
+        <tr><th>Khoang trong</th><th>Cach giai quyet trong project</th><th>Gia tri</th></tr>
+        <tr><td>Nhieu demo offline, thieu latency/FPS.</td><td>CameraX + LIVE_STREAM + throttle 8-12 FPS.</td><td>Gan voi dieu kien realtime.</td></tr>
+        <tr><td>Laptop demo kho deploy len xe.</td><td>Android phone on-device.</td><td>Chi phi thap, de ap dung.</td></tr>
+        <tr><td>Accuracy khong du cho bai toan an toan.</td><td>Tap trung recall/F1 lop drowsy.</td><td>Giam bo sot tinh huong nguy hiem.</td></tr>
+        <tr><td>CNN kho giai thich.</td><td>Giu EAR/MAR lam baseline co the giai thich.</td><td>De bao ve khi hoi dap.</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Can lam tiep tren may co Android Studio</h2>
+      <table>
+        <tr><th>Viec</th><th>Bang chung can co</th><th>Ly do</th></tr>
+        <tr><td>Build/run Android</td><td>App chay tren phone, screenshot hoac video.</td><td>Chung minh native deployment.</td></tr>
+        <tr><td>Train CNN</td><td>`drowsiness_model.tflite` va metrics.</td><td>Chung minh mang no-ron tich chap.</td></tr>
+        <tr><td>Danh gia</td><td>Confusion matrix, recall/F1, FPS.</td><td>An diem Chuong 4.</td></tr>
+        <tr><td>Hoan thien bao cao</td><td>Word report dien so lieu that.</td><td>Phu hop rubric.</td></tr>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

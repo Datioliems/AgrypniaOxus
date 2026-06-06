@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>IS54A Visual Roadmap - Drowsiness Detection</title>
+  <style>
+    :root {
+      --ink: #15202b;
+      --muted: #566273;
+      --line: #d9e0ea;
+      --paper: #ffffff;
+      --bg: #f5f7fb;
+      --navy: #111827;
+      --green: #13795b;
+      --green-soft: #e7f6ef;
+      --amber: #a15c03;
+      --amber-soft: #fff3d8;
+      --red: #b42318;
+      --red-soft: #ffe9e6;
+      --blue: #225db7;
+      --blue-soft: #eaf1ff;
+      --slate-soft: #eef2f7;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+
+    header {
+      background: var(--navy);
+      color: #fff;
+      padding: 34px 28px 28px;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      letter-spacing: 0;
+      line-height: 1.12;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      max-width: 920px;
+      color: #d6deea;
+      font-size: 16px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 18px;
+      margin-top: 24px;
+      align-items: stretch;
+    }
+
+    .hero-panel {
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .hero-panel h2 {
+      margin: 0 0 10px;
+      color: #fff;
+      font-size: 19px;
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .pipe-step {
+      min-height: 92px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .pipe-step strong {
+      display: block;
+      color: #fff;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .pipe-step span {
+      color: #d6deea;
+      font-size: 13px;
+    }
+
+    main {
+      padding: 24px 0 46px;
+    }
+
+    section {
+      margin-top: 18px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    p { margin: 0 0 12px; }
+    a { color: var(--blue); font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .grid-4, .grid-3, .grid-2 {
+      display: grid;
+      gap: 14px;
+    }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .tile {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcff;
+      min-height: 126px;
+    }
+
+    .tile strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 8px;
+      color: var(--navy);
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .ok { background: var(--green-soft); color: var(--green); }
+    .todo { background: var(--amber-soft); color: var(--amber); }
+    .risk { background: var(--red-soft); color: var(--red); }
+    .info { background: var(--blue-soft); color: var(--blue); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--slate-soft);
+      color: var(--navy);
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .phase {
+      border-left: 5px solid var(--blue);
+      background: #fbfcff;
+      border-radius: 8px;
+      border-top: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 14px;
+      min-height: 185px;
+    }
+
+    .phase small {
+      display: block;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    ul {
+      padding-left: 18px;
+      margin: 8px 0 0;
+    }
+
+    li { margin: 5px 0; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .flow div {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcff;
+      min-height: 82px;
+      font-size: 13px;
+    }
+
+    .flow strong { display: block; margin-bottom: 4px; }
+
+    .callout {
+      border-left: 5px solid var(--green);
+      background: var(--green-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-top: 14px;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: #fff;
+    }
+
+    code {
+      background: #edf2f7;
+      border: 1px solid #d7dee8;
+      border-radius: 5px;
+      padding: 2px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: .95em;
+    }
+
+    .command {
+      display: block;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      padding: 12px;
+      background: #121826;
+      color: #e8eef8;
+      border-radius: 8px;
+      border: 1px solid #2a3446;
+      margin-top: 8px;
+    }
+
+    footer {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 0 0 28px;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid, .grid-4, .grid-3, .grid-2, .timeline, .flow {
+        grid-template-columns: 1fr;
+      }
+      header { padding: 28px 0 24px; }
+      section { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Roadmap Trực Quan IS54A</h1>
+      <p class="subtitle">
+        Hệ thống phát hiện và cảnh báo buồn ngủ tài xế: xây mô hình AI, deploy Android native,
+        chuẩn bị Streamlit fallback và đối chiếu toàn bộ tiêu chí chấm điểm.
+      </p>
+
+      <div class="hero-grid">
+        <div class="hero-panel">
+          <h2>Pipeline bản chính nên bảo vệ</h2>
+          <div class="pipeline">
+            <div class="pipe-step"><strong>CameraX</strong><span>Điện thoại Android lấy frame realtime.</span></div>
+            <div class="pipe-step"><strong>MediaPipe</strong><span>Tìm mặt, mắt, miệng bằng Face Landmarker.</span></div>
+            <div class="pipe-step"><strong>EAR/MAR + CNN</strong><span>Luật nền ổn định, CNN phân loại mắt mở/nhắm.</span></div>
+            <div class="pipe-step"><strong>TFLite + Alert</strong><span>Chạy on-device, cảnh báo rung/âm thanh.</span></div>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <h2>Chiến lược nộp chắc</h2>
+          <p>Android native là sản phẩm chính. Streamlit là bản demo phụ để trình bày thuật toán, dataset và kết quả.</p>
+          <p>YOLO/FastAPI/embedded nên đưa vào hướng phát triển, trừ khi đã có đủ dataset bounding box và thời gian tích hợp.</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section>
+      <h2>Tổng Quan Điểm IS54A</h2>
+      <div class="grid-4">
+        <div class="tile"><span class="tag info">Báo cáo</span><strong>4.5</strong><p>Chương 1-4, kết luận, format và trích nguồn.</p></div>
+        <div class="tile"><span class="tag info">Sản phẩm</span><strong>1.5</strong><p>Demo đúng bài toán, source khớp báo cáo, tổ chức project.</p></div>
+        <div class="tile"><span class="tag info">Thuyết trình</span><strong>1.0</strong><p>Không quá 8 phút, demo trọn vẹn điểm nổi bật.</p></div>
+        <div class="tile"><span class="tag info">Cá nhân</span><strong>3.0</strong><p>Hiểu phần mình làm, trả lời câu hỏi và chứng minh đóng góp.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Lộ Trình Làm Từ Dataset Đến Demo</h2>
+      <div class="timeline">
+        <div class="phase">
+          <small>Bước 1</small>
+          <h3>Chuẩn bị dữ liệu</h3>
+          <ul>
+            <li>Tải MRL eye-state dataset.</li>
+            <li>Chuẩn hóa <code>train/val/test</code>.</li>
+            <li>Thống kê số ảnh từng lớp.</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <small>Bước 2</small>
+          <h3>Train CNN</h3>
+          <ul>
+            <li>Input ảnh mắt <code>64x64x3</code>.</li>
+            <li>Output <code>eyes_open</code>, <code>eyes_closed</code>.</li>
+            <li>Export <code>drowsiness_model.tflite</code>.</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <small>Bước 3</small>
+          <h3>Evaluate</h3>
+          <ul>
+            <li>Accuracy, precision, recall, F1.</li>
+            <li>Confusion matrix.</li>
+            <li>Nhấn mạnh recall lớp nhắm mắt.</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <small>Bước 4</small>
+          <h3>Deploy Android</h3>
+          <ul>
+            <li>Đặt model vào assets.</li>
+            <li>Run bằng Android Studio.</li>
+            <li>Quay demo nhắm mắt/ngáp.</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <small>Bước 5</small>
+          <h3>Báo cáo và backup</h3>
+          <ul>
+            <li>Điền số liệu thật vào Word.</li>
+            <li>Chạy Streamlit fallback.</li>
+            <li>Đóng gói zip nộp.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Pipeline AI Trực Quan</h2>
+      <div class="flow">
+        <div><strong>Frame</strong>Ảnh từ camera điện thoại.</div>
+        <div><strong>Face Landmarker</strong>Tìm landmarks khuôn mặt.</div>
+        <div><strong>EAR/MAR</strong>Đặc trưng mắt và miệng.</div>
+        <div><strong>Eye ROI</strong>Cắt vùng mắt từ landmarks.</div>
+        <div><strong>CNN</strong>Phân loại mở/nhắm mắt.</div>
+        <div><strong>Smoothing</strong>Kiểm tra trạng thái kéo dài.</div>
+        <div><strong>Alert</strong>Hiển thị, rung, âm thanh, log sự kiện.</div>
+      </div>
+      <div class="callout">
+        Câu trả lời ngắn khi bảo vệ: MediaPipe giải quyết “mắt ở đâu”, CNN giải quyết “mắt mở hay nhắm”, còn EAR/MAR và smoothing giúp cảnh báo ổn định theo thời gian.
+      </div>
+    </section>
+
+    <section>
+      <h2>Đối Chiếu Báo Cáo 4.5 Điểm</h2>
+      <table>
+        <tr><th>Mục</th><th>Điểm</th><th>Nội dung cần có</th><th>Artifact trong project</th></tr>
+        <tr>
+          <td>Chương 1</td><td>0.5</td>
+          <td>Bài toán AI, input/output, ứng dụng thực tế, phạm vi, khảo sát liên quan.</td>
+          <td><code>docs/DE_CUONG_BAO_CAO.md</code>, <code>research/SOURCES_FOR_REPORT.md</code></td>
+        </tr>
+        <tr>
+          <td>Chương 2</td><td>1.0</td>
+          <td>Nguồn dataset, tổ chức dữ liệu, gán nhãn, thống kê, tiền xử lý, trích nguồn.</td>
+          <td><code>tools/summarize_dataset.py</code>, <code>outputs/dataset_summary/*</code></td>
+        </tr>
+        <tr>
+          <td>Chương 3</td><td>1.5</td>
+          <td>Đặc trưng EAR/MAR, MediaPipe landmarks, CNN, pretrained/custom model, pipeline.</td>
+          <td><code>docs/MEDIAPIPE_LANDMARK_PIPELINE.md</code>, source Kotlin Android</td>
+        </tr>
+        <tr>
+          <td>Chương 4</td><td>1.0</td>
+          <td>Metrics, thí nghiệm, công nghệ prototype, ảnh kết quả và demo.</td>
+          <td><code>tools/evaluate_eye_classifier.py</code>, <code>outputs/evaluation/*</code></td>
+        </tr>
+        <tr>
+          <td>Kết luận</td><td>0.5</td>
+          <td>Đã làm được, hạn chế, hướng phát triển, format sạch.</td>
+          <td><code>outputs/Bao_cao_nhap_DrowsyDriverAndroid.docx</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Trạng Thái Cần Theo Dõi</h2>
+      <div class="grid-3">
+        <div class="tile">
+          <span class="tag ok">Đã có nền</span>
+          <h3>Android prototype</h3>
+          <p>CameraX, MediaPipe Face Landmarker, EAR/MAR, overlay, alert, event log và TFLite classifier wrapper.</p>
+        </div>
+        <div class="tile">
+          <span class="tag todo">Cần số liệu thật</span>
+          <h3>Train và evaluate</h3>
+          <p>Cần sinh <code>drowsiness_model.tflite</code>, <code>metrics.json</code>, <code>confusion_matrix.csv</code> và dataset summary.</p>
+        </div>
+        <div class="tile">
+          <span class="tag todo">Cần demo thật</span>
+          <h3>Android run</h3>
+          <p>Cần chạy trên điện thoại, chụp ảnh app, quay video demo và nếu kịp build debug APK.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Deploy: Nên Nói Thế Nào Cho Gọn</h2>
+      <table>
+        <tr><th>Hướng deploy</th><th>Vai trò</th><th>Nên dùng trong bài</th><th>Rủi ro</th></tr>
+        <tr>
+          <td>Android native</td>
+          <td>Bản chính chạy on-device.</td>
+          <td>Có, ưu tiên cao nhất.</td>
+          <td>Cần Android Studio, điện thoại, quyền camera.</td>
+        </tr>
+        <tr>
+          <td>Streamlit</td>
+          <td>Fallback web demo/dataset dashboard.</td>
+          <td>Có, làm bản phụ.</td>
+          <td>Không phù hợp cảnh báo realtime thực tế bằng Android.</td>
+        </tr>
+        <tr>
+          <td>FastAPI/Flask</td>
+          <td>Server inference nhận ảnh/frame.</td>
+          <td>Ghi hướng mở rộng.</td>
+          <td>Phụ thuộc mạng, độ trễ, bảo mật dữ liệu khuôn mặt.</td>
+        </tr>
+        <tr>
+          <td>Raspberry Pi/Jetson</td>
+          <td>Embedded với camera riêng.</td>
+          <td>Ghi hướng phát triển.</td>
+          <td>Cần phần cứng, tối ưu tốc độ và cảnh báo ngoài.</td>
+        </tr>
+        <tr>
+          <td>YOLO end-to-end</td>
+          <td>Detect trực tiếp mắt mở/nhắm/ngáp.</td>
+          <td>So sánh hoặc mở rộng.</td>
+          <td>Cần bounding box labels, export và post-processing khó hơn.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Lệnh Cần Nhớ</h2>
+      <div class="grid-2">
+        <div>
+          <h3>Dataset và model</h3>
+          <code class="command">python tools/summarize_dataset.py --data dataset --out outputs/dataset_summary
+python tools/train_eye_classifier.py --data dataset --out app/src/main/assets/drowsiness_model.tflite --epochs 12
+python tools/evaluate_eye_classifier.py --data dataset --tflite app/src/main/assets/drowsiness_model.tflite</code>
+        </div>
+        <div>
+          <h3>Deploy và đóng gói</h3>
+          <code class="command">streamlit run streamlit_app.py
+powershell -ExecutionPolicy Bypass -File tools/check_android_env.ps1
+python tools/verify_project.py
+powershell -ExecutionPolicy Bypass -File tools/package_submission.ps1</code>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Mở Tài Liệu Chi Tiết</h2>
+      <div class="links">
+        <a href="AI_MODEL_AND_DEPLOYMENT_FULL_GUIDE.md">AI model và deploy</a>
+        <a href="IS54A_REQUIREMENTS_COVERAGE.md">Đối chiếu IS54A</a>
+        <a href="STREAMLIT_AND_OTHER_DEPLOYMENT.md">Streamlit và deploy khác</a>
+        <a href="MEDIAPIPE_LANDMARK_PIPELINE.md">MediaPipe pipeline</a>
+        <a href="MEDIAPIPE_VS_YOLO_COMPARISON.md">So sánh MediaPipe/YOLO</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    DrowsyDriverAndroid - visual roadmap for IS54A final project.
+  </footer>
+</body>
+</html>
