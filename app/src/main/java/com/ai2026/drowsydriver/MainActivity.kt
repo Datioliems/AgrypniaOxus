@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
         alertController = AlertController(this)
         eventLogger = EventLogger(this)
         tfliteClassifier = TfliteDrowsinessClassifier(this)
+        tfliteClassifier?.logStatus()   // log CNN status khi khởi động
         setupUi()
         setupFaceLandmarker()
 
@@ -238,7 +239,9 @@ class MainActivity : ComponentActivity() {
         latencyMs: Long
     ): DriverStatus {
         val now = SystemClock.uptimeMillis()
-        val cnnClosed = cnnPrediction?.label == "eyes_closed" && cnnPrediction.confidence >= 0.70f
+        // Dùng ngưỡng từ classifier constant (0.55f) thay vì hardcode 0.70f
+        val cnnClosed = cnnPrediction?.label == "eyes_closed" &&
+                cnnPrediction.confidence >= TfliteDrowsinessClassifier.CNN_CONF_THRESHOLD
         val cnnClosedMs = if (cnnClosed) {
             if (cnnClosedStartedAt == null) cnnClosedStartedAt = now
             now - (cnnClosedStartedAt ?: now)
@@ -254,7 +257,7 @@ class MainActivity : ComponentActivity() {
         }
 
         val shouldUseCnn = cnnPrediction != null &&
-            cnnPrediction.confidence >= 0.70f &&
+            cnnPrediction.confidence >= TfliteDrowsinessClassifier.CNN_CONF_THRESHOLD &&
             heuristicStatus.state != DriverState.YAWNING
 
         val fusedState = when {
