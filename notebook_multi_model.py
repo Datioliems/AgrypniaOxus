@@ -162,7 +162,7 @@ try:
     from roboflow import Roboflow
 
     rf = Roboflow(api_key="qI3lEKlNpIZpNENdk3MH")
-    project = rf.workspace("nguyen-tuan-dat").project("drowsiness driver")
+    project = rf.workspace("nguyen-tuan-dat").project("drowsiness-driver")
 
     print("📥 Downloading YOLOv8 format dataset...")
     dataset_yolo = project.version(1).download(

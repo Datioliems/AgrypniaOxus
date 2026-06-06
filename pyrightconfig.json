@@ -1,0 +1,11 @@
+{
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none",
+  "reportUndefinedVariable": "warning",
+  "exclude": [
+    "colab_yolo26_training.py",
+    "colab_drowsy_yolo26.ipynb"
+  ]
+}

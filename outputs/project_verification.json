@@ -16,19 +16,19 @@
       "label": "Android app build file",
       "path": "app/build.gradle",
       "exists": true,
-      "size": 982
+      "size": 1302
     },
     {
       "label": "Android manifest",
       "path": "app/src/main/AndroidManifest.xml",
       "exists": true,
-      "size": 876
+      "size": 1043
     },
     {
       "label": "MainActivity",
       "path": "app/src/main/java/com/ai2026/drowsydriver/MainActivity.kt",
       "exists": true,
-      "size": 9488
+      "size": 16923
     },
     {
       "label": "DrowsinessAnalyzer",
@@ -40,13 +40,13 @@
       "label": "TFLite classifier",
       "path": "app/src/main/java/com/ai2026/drowsydriver/TfliteDrowsinessClassifier.kt",
       "exists": true,
-      "size": 2159
+      "size": 7012
     },
     {
       "label": "Event logger",
       "path": "app/src/main/java/com/ai2026/drowsydriver/EventLogger.kt",
       "exists": true,
-      "size": 1654
+      "size": 1751
     },
     {
       "label": "MediaPipe model asset",
@@ -58,7 +58,7 @@
       "label": "README",
       "path": "README.md",
       "exists": true,
-      "size": 7864
+      "size": 8983
     },
     {
       "label": "4-day plan",
@@ -208,7 +208,7 @@
       "label": "Training script",
       "path": "tools/train_eye_classifier.py",
       "exists": true,
-      "size": 4406
+      "size": 13081
     },
     {
       "label": "Evaluation script",
@@ -299,11 +299,11 @@
     {
       "label": "Android debug APK",
       "path": "app/build/outputs/apk/debug/app-debug.apk",
-      "exists": false,
-      "size": null
+      "exists": true,
+      "size": 71355313
     }
   ],
   "required_passed": true,
-  "optional_present_count": 6,
+  "optional_present_count": 7,
   "optional_total": 7
 }

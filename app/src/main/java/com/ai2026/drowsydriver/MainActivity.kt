@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
+import android.view.Surface
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
@@ -136,11 +137,16 @@ class MainActivity : ComponentActivity() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
-            val preview = Preview.Builder().build().also {
+            val targetRotation = previewView.display?.rotation ?: Surface.ROTATION_0
+            val preview = Preview.Builder()
+                .setTargetRotation(targetRotation)
+                .build()
+                .also {
                 it.setSurfaceProvider(previewView.surfaceProvider)
             }
 
             val imageAnalysis = ImageAnalysis.Builder()
+                .setTargetRotation(targetRotation)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()

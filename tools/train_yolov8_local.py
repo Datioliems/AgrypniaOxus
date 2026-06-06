@@ -79,7 +79,7 @@ def download_roboflow_yolov8(out_dir: Path):
     print("📥 Download Roboflow YOLOv8 dataset...")
     from roboflow import Roboflow
     rf = Roboflow(api_key="qI3lEKlNpIZpNENdk3MH")
-    project = rf.workspace("nguyen-tuan-dat").project("drowsiness driver")
+    project = rf.workspace("nguyen-tuan-dat").project("drowsiness-driver")
     dataset  = project.version(1).download(
         "yolov8",
         location=str(out_dir / "yolov8"),
