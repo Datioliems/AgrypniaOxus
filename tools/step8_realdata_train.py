@@ -97,6 +97,24 @@ nn = save_mouth_crops(frames_of_video(f"{WORK}/awake.mp4"), f"{YAWN}/no_yawn")
 ny = save_mouth_crops(frames_of_video(f"{WORK}/yawn_1.mp4"), f"{YAWN}/yawn")
 print(f"  no_yawn={nn}  yawn={ny}")
 
+# ── TRỘN dữ liệu GỐC (MRL/Kaggle) để model RD ROBUST với mọi góc mặt ──
+# (real-data 1 người/trực diện → dễ false-alarm khi nghiêng; trộn data gốc đa dạng để khắc phục)
+import random as _rnd
+def add_samples(src, dst, n):
+    fs = glob.glob(f"{src}/*.*")
+    if not fs: return 0
+    k = 0
+    for p in _rnd.sample(fs, min(n, len(fs))):
+        im = imread_u(p)
+        if im is not None and im.size:
+            cv2.imwrite(f"{dst}/orig_{k}.jpg", cv2.resize(im, (64, 64))); k += 1
+    return k
+me1 = add_samples("dataset/train/eyes_open",   f"{EYE}/eyes_open",   1500)
+me2 = add_samples("dataset/train/eyes_closed", f"{EYE}/eyes_closed", 1500)
+my1 = add_samples("dataset_yawn/train/no_yawn", f"{YAWN}/no_yawn", 1000)
+my2 = add_samples("dataset_yawn/train/yawn",    f"{YAWN}/yawn",    1000)
+print(f"  + trộn data GỐC: eye(+{me1}/+{me2}) yawn(+{my1}/+{my2}) → robust mọi góc mặt")
+
 def train_cnn(data_dir, classes, out_tflite, epochs=20):
     # Data ít + frame gần trùng → KHÔNG dùng BatchNorm (gây gap train/val), thêm augmentation
     # + class_weight (cân bằng lớp) + dropout cao để chống overfit.

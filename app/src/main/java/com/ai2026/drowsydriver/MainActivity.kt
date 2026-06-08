@@ -50,6 +50,14 @@ class MainActivity : ComponentActivity() {
     @Volatile private var latestFrameStartedAt = 0L
     @Volatile private var latestBitmap: Bitmap? = null
 
+    // Thống kê phiên lái (cho màn Analytics)
+    private var sessionStart = 0L
+    private var drowsyCount = 0
+    private var yawnCount = 0
+    private var drowsyMs = 0L
+    private var prevState = DriverState.AWAKE
+    private var lastStatsWrite = 0L
+
     private val requestPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -107,7 +115,46 @@ class MainActivity : ComponentActivity() {
             Gravity.BOTTOM
         )
         root.addView(messageView, messageParams)
+
+        // Nút điều hướng: Thống kê + SOS (góc trên phải)
+        val navBar = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+        }
+        navBar.addView(android.widget.Button(this).apply {
+            text = "📊"; textSize = 18f
+            setOnClickListener { startActivity(android.content.Intent(this@MainActivity, AnalyticsActivity::class.java)) }
+        })
+        navBar.addView(android.widget.Button(this).apply {
+            text = "🆘"; textSize = 18f
+            setOnClickListener { startActivity(android.content.Intent(this@MainActivity, EmergencyContactActivity::class.java)) }
+        })
+        root.addView(navBar, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+            Gravity.TOP or Gravity.END))
+
         setContentView(root)
+    }
+
+    /** Cập nhật thống kê phiên lái → SharedPreferences (cho màn Analytics). */
+    private fun updateStats(status: DriverStatus) {
+        val now = System.currentTimeMillis()
+        if (sessionStart == 0L) sessionStart = now
+        if (status.state == DriverState.DROWSY) {
+            drowsyMs += 100L
+            if (prevState != DriverState.DROWSY) drowsyCount++
+        }
+        if (status.state == DriverState.YAWNING && prevState != DriverState.YAWNING) yawnCount++
+        prevState = status.state
+        if (now - lastStatsWrite > 1500L) {
+            lastStatsWrite = now
+            val ts = java.text.SimpleDateFormat("HH:mm dd/MM", java.util.Locale.getDefault()).format(java.util.Date())
+            val e = getSharedPreferences("agrypnia_prefs", MODE_PRIVATE).edit()
+            e.putLong("session_sec", (now - sessionStart) / 1000)
+                .putInt("drowsy_events", drowsyCount).putInt("yawn_events", yawnCount)
+                .putLong("drowsy_sec", drowsyMs / 1000)
+            if (status.state == DriverState.DROWSY) e.putString("last_drowsy_at", ts)
+            e.apply()
+        }
     }
 
     private fun setupFaceLandmarker() {
@@ -239,6 +286,7 @@ class MainActivity : ComponentActivity() {
             val report = sessionTracker.update(status, SystemClock.uptimeMillis())
             overlayView.update(status, report)
             alertController.update(status)
+            updateStats(status)
             eventLogger.logIfNeeded(status)
             if (status.state != DriverState.NO_FACE) {
                 val cnnState = if (tfliteClassifier?.isAvailable == true) "CNN primary + EAR/MAR fallback" else "CNN model pending"
