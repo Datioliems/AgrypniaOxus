@@ -2,11 +2,11 @@
 # App chạy đầy đủ bằng chế độ CHỤP ẢNH (st.camera_input) — KHÔNG cần WebRTC.
 
 streamlit>=1.35
-numpy>=1.26
+numpy>=1.26,<2                 # QUAN TRỌNG: mediapipe/opencv hay VỠ với numpy 2.x → ghim <2
 pillow>=10.0
 pandas>=2.0
 opencv-python-headless>=4.8   # headless: hợp cloud (KHÔNG dùng opencv-python để tránh lỗi libGL)
-mediapipe>=0.10.0             # FaceLandmarker → EAR/MAR
+mediapipe>=0.10,<0.11         # FaceLandmarker → EAR/MAR (dòng 0.10.x có wheel ổn định cho Python 3.11/3.12)
 
 # ─── TÙY CHỌN: camera TRỰC TIẾP (WebRTC). Thiếu vẫn chạy đầy đủ bằng chế độ chụp ảnh. ───
 # Hai gói này hay gây LỖI BUILD trên Streamlit Cloud (av cần ffmpeg, webrtc cần TURN server)

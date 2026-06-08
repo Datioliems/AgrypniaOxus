@@ -18,7 +18,7 @@ Mở trình duyệt `http://localhost:8501` → cho phép camera → bật **Kí
 
 ### B1. Đưa code lên GitHub
 ```powershell
-git add streamlit_app.py requirements-streamlit.txt packages.txt
+git add streamlit_app.py requirements.txt packages.txt runtime.txt
 git commit -m "Add Streamlit drowsy demo"
 git push
 ```
@@ -26,8 +26,16 @@ git push
 ### B2. Tạo app
 1. Vào [share.streamlit.io](https://share.streamlit.io) → đăng nhập GitHub.
 2. **New app** → chọn repo + branch + file `streamlit_app.py`.
-3. **Advanced settings** → Python 3.11 (hoặc 3.10/3.12).
-4. **Deploy**. Lần đầu cài deps ~3-5 phút.
+3. **Advanced settings → Python version = 3.12** (BẮT BUỘC — xem cảnh báo dưới).
+4. **Deploy**. Lần đầu cài deps ~3–5 phút.
+
+> 🔴 **NGUYÊN NHÂN DEPLOY HAY "BỊ COOK" (fail) — và cách sửa:**
+> Streamlit Cloud **mặc định Python 3.13**, nhưng **`mediapipe` chưa có bản cài (wheel) cho 3.13**
+> → pip dựng từ nguồn và **lỗi build**. **Phải chọn Python 3.12** ở *Advanced settings* khi tạo app
+> (hoặc menu *⋮ → Settings → Python version* nếu app đã tạo, rồi *Reboot*).
+> Ngoài ra `requirements.txt` đã ghim **`numpy<2`** (numpy 2.x hay làm vỡ mediapipe/opencv) và bỏ
+> `streamlit-webrtc`/`av` (hai gói này cũng hay làm fail build). File `runtime.txt` (`python-3.12`)
+> đã có sẵn trong repo để các nền tảng khác (Render, Railway…) tự nhận đúng Python.
 
 ### B3. File cấu hình cần có trong repo
 - `requirements-streamlit.txt` — Streamlit Cloud tự đọc nếu đặt tên `requirements.txt`. **Nếu để tên khác** → đổi tên thành `requirements.txt` hoặc khai báo trong app settings.
