@@ -20,15 +20,24 @@ import streamlit as st
 st.set_page_config(page_title="DrowsyDriver AI", page_icon="🚗",
                    layout="wide", initial_sidebar_state="expanded")
 
-# Import "mềm" — thiếu gói thì báo rõ thay vì crash
+# CORE = cv2 + mediapipe (bắt buộc cho phân tích ảnh).
+# WEBRTC = av + streamlit-webrtc (TÙY CHỌN: camera trực tiếp). Thiếu vẫn chạy bằng ảnh chụp
+# → hợp deploy Streamlit Cloud (nơi webrtc/av hay lỗi build hoặc cần TURN server).
 try:
     import cv2
     import mediapipe as mp
+    CORE_OK, CORE_ERR = True, ""
+except Exception as e:                                       # pragma: no cover
+    CORE_OK, CORE_ERR = False, str(e)
+
+try:
     import av
     from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode
-    DEPS_OK, DEPS_ERR = True, ""
-except Exception as e:                                       # pragma: no cover
-    DEPS_OK, DEPS_ERR = False, str(e)
+    WEBRTC_OK = True
+except Exception:                                            # pragma: no cover
+    WEBRTC_OK = False
+    class VideoProcessorBase:                                # placeholder để khai báo Processor
+        pass
 
 # TFLite (tùy chọn — hiển thị thêm dự đoán CNN nếu có model)
 TFLITE = None
@@ -80,33 +89,52 @@ def _mar(top, bot, left, right):
     return math.dist(top, bot) / (math.dist(left, right) + 1e-6)
 
 
-# ───────────────────────── Âm thanh cảnh báo (sinh sẵn, base64) ─────────────────────────
-def make_tone(freq=880, ms=600, kind="beep"):
-    rate, frames = 16000, bytearray()
-    n = int(rate * ms / 1000)
-    for i in range(n):
-        t = i / rate
-        if kind == "siren":
-            f = freq + 300 * math.sin(2 * math.pi * 3 * t)
-        elif kind == "voice":
-            f = freq if (i // (rate // 4)) % 2 == 0 else 0
-        else:
-            f = freq
-        val = int(32767 * 0.6 * math.sin(2 * math.pi * f * t)) if f else 0
-        frames += struct.pack("<h", val)
-    hdr = (b"RIFF" + struct.pack("<I", 36 + len(frames)) + b"WAVE" + b"fmt "
-           + struct.pack("<IHHIIHH", 16, 1, 1, rate, rate * 2, 2, 16)
-           + b"data" + struct.pack("<I", len(frames)))
-    return base64.b64encode(hdr + bytes(frames)).decode()
+# ─────── Âm thanh cảnh báo: BINAURAL BEATS dải BETA (13–21 Hz) kích thích tỉnh táo ───────
+# Cơ chế (CK AI §1.3): tai TRÁI nghe sóng mang f, tai PHẢI nghe f+beat → não cảm nhận nhịp
+# 'beat' Hz. Dải beta (13–21 Hz) gắn với sự tỉnh táo/tập trung (Moessinger, 2021). Hai tông
+# lệch nhau cũng tạo 'acoustic beating' nghe được trên loa đơn nên hiệu quả cả khi không tai nghe.
+RATE = 16000
 
 
-SOUNDS = {"Beep": make_tone(880, 500, "beep"),
-          "Siren": make_tone(700, 900, "siren"),
-          "Nhắc giọng": make_tone(600, 800, "voice")}
+def _wav_stereo(int16_interleaved):
+    data = int16_interleaved.tobytes()
+    byte_rate = RATE * 2 * 2                                  # rate * channels * bytes/sample
+    hdr = (b"RIFF" + struct.pack("<I", 36 + len(data)) + b"WAVE" + b"fmt "
+           + struct.pack("<IHHIIHH", 16, 1, 2, RATE, byte_rate, 4, 16)   # channels = 2
+           + b"data" + struct.pack("<I", len(data)))
+    return base64.b64encode(hdr + bytes(data)).decode()
 
 
-def play_sound(b64):
-    st.markdown(f'<audio autoplay loop src="data:audio/wav;base64,{b64}"></audio>',
+def make_binaural(carrier=200.0, beat=18.0, ms=4000, vol=0.55):
+    """Binaural beat stereo (L=carrier, R=carrier+beat)."""
+    t = np.arange(int(RATE * ms / 1000)) / RATE
+    dur = ms / 1000.0
+    env = np.clip(np.minimum(np.minimum(t * 6.0, (dur - t) * 6.0), 1.0), 0.0, 1.0)
+    left = (32767 * vol * env * np.sin(2 * np.pi * carrier * t)).astype("<i2")
+    right = (32767 * vol * env * np.sin(2 * np.pi * (carrier + beat) * t)).astype("<i2")
+    inter = np.empty(left.size * 2, dtype="<i2")
+    inter[0::2] = left; inter[1::2] = right
+    return _wav_stereo(inter)
+
+
+def make_beep(freq=880.0, ms=500, vol=0.5):
+    t = np.arange(int(RATE * ms / 1000)) / RATE
+    v = (32767 * vol * np.sin(2 * np.pi * freq * t)).astype("<i2")
+    inter = np.empty(v.size * 2, dtype="<i2"); inter[0::2] = v; inter[1::2] = v
+    return _wav_stereo(inter)
+
+
+SOUNDS = {
+    "Binaural beta 18 Hz (khuyến nghị)": make_binaural(200, 18, 4000),
+    "Binaural beta 14 Hz": make_binaural(200, 14, 4000),
+    "Binaural beta 21 Hz": make_binaural(200, 21, 4000),
+    "Beep cảnh báo": make_beep(880, 600),
+}
+
+
+def play_sound(b64, loop=True):
+    lp = "loop" if loop else ""
+    st.markdown(f'<audio autoplay {lp} src="data:audio/wav;base64,{b64}"></audio>',
                 unsafe_allow_html=True)
 
 
@@ -150,13 +178,14 @@ def init_state():
     ss.setdefault("ear_thr", 0.21)
     ss.setdefault("mar_thr", 0.6)
     ss.setdefault("closed_sec", 1.5)
-    ss.setdefault("sound", "Siren")
+    ss.setdefault("sound", "Binaural beta 18 Hz (khuyến nghị)")
     ss.setdefault("history", [])
     ss.setdefault("hours", load_hours())
+    ss.setdefault("drive_start", time.time())
 
 
 # ───────────────────────── Bộ xử lý video (chạy theo từng frame) ─────────────────────────
-if DEPS_OK:
+if WEBRTC_OK and CORE_OK:
     class Processor(VideoProcessorBase):
         def __init__(self):
             self.landmarker = _make_landmarker()
@@ -293,42 +322,44 @@ def page_dashboard():
     ss = st.session_state
     c1, c2 = st.columns([3, 2])
 
+    vp = None
+    snap_status = None
     with c1:
-        ss.show_cam = st.toggle("📷 Hiện camera", value=ss.show_cam)
-        ctx = None
-        try:
-            ctx = webrtc_streamer(
-                key="cam", mode=WebRtcMode.SENDRECV, video_processor_factory=Processor,
-                rtc_configuration=RTC_CONFIG,
-                media_stream_constraints={"video": True, "audio": False},
-                async_processing=True)
-            if ctx and ctx.video_processor:
-                vp = ctx.video_processor
-                vp.ear_thr, vp.mar_thr = ss.ear_thr, ss.mar_thr
-                vp.closed_sec, vp.show = ss.closed_sec, ss.show_cam
-        except Exception as e:                                  # webrtc lỗi → không sập app
-            st.warning(f"⚠️ Camera trực tiếp (WebRTC) không khả dụng. Dùng chế độ ảnh chụp bên dưới.\n\n{e}")
+        modes = ["📸 Chụp ảnh (ổn định, hợp web)"]
+        if WEBRTC_OK:
+            modes.append("🎥 Camera trực tiếp (WebRTC)")
+        mode = st.radio("Chế độ camera", modes, horizontal=True, label_visibility="collapsed")
 
-        # Fallback luôn sẵn sàng: chụp 1 ảnh để phân tích (hoạt động kể cả khi WebRTC lỗi)
-        with st.expander("📸 Chế độ ảnh chụp (dùng khi camera trực tiếp lỗi)"):
-            snap = st.camera_input("Chụp ảnh khuôn mặt để phân tích nhanh")
+        if mode.startswith("🎥"):
+            try:
+                ctx = webrtc_streamer(
+                    key="cam", mode=WebRtcMode.SENDRECV, video_processor_factory=Processor,
+                    rtc_configuration=RTC_CONFIG,
+                    media_stream_constraints={"video": True, "audio": False},
+                    async_processing=True)
+                if ctx and ctx.video_processor:
+                    vp = ctx.video_processor
+                    vp.ear_thr, vp.mar_thr = ss.ear_thr, ss.mar_thr
+                    vp.closed_sec, vp.show = ss.closed_sec, True
+            except Exception as e:
+                st.warning(f"⚠️ Camera trực tiếp lỗi — hãy chuyển sang chế độ chụp ảnh. ({e})")
+        else:
+            snap = st.camera_input("Chụp ảnh khuôn mặt để phân tích")
             if snap is not None:
                 from PIL import Image
                 s_status, s_ear, s_mar, s_img = analyze_snapshot(
                     Image.open(snap), ss.ear_thr, ss.mar_thr)
+                snap_status = s_status
                 st.image(cv2.cvtColor(s_img, cv2.COLOR_BGR2RGB), channels="RGB",
-                         caption=f"Kết quả: {s_status}  (EAR {s_ear:.2f} · MAR {s_mar:.2f})")
+                         caption=f"EAR {s_ear:.2f} · MAR {s_mar:.2f}  →  {s_status}")
                 if s_status == "DROWSY":
                     bump_hour()
-                    if ss.monitoring:
-                        ss.page = "Alert"; st.rerun()
 
     with c2:
         ss.monitoring = st.toggle("🟢 KÍCH HOẠT GIÁM SÁT", value=ss.monitoring)
-        vp = ctx.video_processor if ctx else None
         metric_card("Số lần ngáp (phiên này)", vp.yawn_count if vp else 0)
 
-        status = vp.status if vp else "—"
+        status = (vp.status if vp else None) or snap_status or "—"
         cls = {"ALERT": "status-alert", "WARNING": "status-warn",
                "DROWSY": "status-drowsy"}.get(status, "status-warn")
         label = {"ALERT": "✅ TỈNH TÁO", "WARNING": "🟡 CÓ DẤU HIỆU MỆT",
@@ -337,17 +368,26 @@ def page_dashboard():
         if vp:
             st.progress(min(vp.ear / 0.4, 1.0), text=f"EAR {vp.ear:.2f}")
 
-        if ss.monitoring and vp:
-            if vp.event:
+        # ⏱️ Thời gian lái + nhắc nghỉ ở mốc 2 giờ và 4 giờ (CK AI §1.3)
+        mins = int((time.time() - ss.drive_start) / 60)
+        st.caption(f"⏱️ Thời gian lái liên tục: {mins // 60} giờ {mins % 60} phút")
+        for mark in (2, 4):
+            if mins >= mark * 60 and not ss.get(f"rest_{mark}"):
+                ss[f"rest_{mark}"] = True
+                st.warning(f"⏰ Bạn đã lái {mark} giờ liên tục — nên dừng nghỉ 15–30 phút!")
+
+        if ss.monitoring:
+            if vp and vp.event:
                 ss.history.append((time.strftime("%H:%M:%S"), vp.event[0], vp.event[1]))
-                if vp.event[0] == "Nhắm mắt":      # buồn ngủ → ghi khung giờ
+                if vp.event[0] == "Nhắm mắt":
                     bump_hour()
-            if vp.status == "DROWSY":
+            if status == "DROWSY":
                 ss.page = "Alert"; st.rerun()
 
-    st.info("Bật **Kích hoạt giám sát** rồi nhắm mắt > 1.5s hoặc ngáp để thử cảnh báo.")
-    if not TFLITE:
-        st.caption("ℹ️ Đang dùng EAR/MAR (MediaPipe). Có `drowsiness_model.tflite` sẽ tự nạp thêm CNN.")
+    st.info("Bật **Kích hoạt giám sát**, rồi nhắm mắt > 1.5s hoặc ngáp để thử cảnh báo. "
+            "Âm thanh dùng **binaural beats dải beta** — nghe rõ nhất khi đeo tai nghe.")
+    if not WEBRTC_OK:
+        st.caption("ℹ️ Bản web đang chạy chế độ **chụp ảnh** (không cần WebRTC) — ổn định khi deploy.")
 
 
 def page_alert():
@@ -402,11 +442,16 @@ def page_analytics():
     ss.mar_thr = st.slider("Ngưỡng MAR (thấp = nhạy ngáp hơn)", 0.40, 1.00, ss.mar_thr, 0.05)
     ss.closed_sec = st.slider("Nhắm mắt liên tục bao lâu thì báo (giây)", 0.5, 4.0, ss.closed_sec, 0.5)
 
-    st.subheader("🔊 Âm thanh cảnh báo")
-    ss.sound = st.selectbox("Chọn loại âm thanh", list(SOUNDS.keys()),
+    st.subheader("🔊 Âm thanh cảnh báo — Binaural beats (beta 13–21 Hz)")
+    st.caption("Cơ chế kích thích tỉnh táo bằng nhịp sóng não dải beta (CK AI §1.3): tai trái và tai "
+               "phải nghe hai tần số lệch nhau. **Nghe rõ nhất khi đeo tai nghe**; trên loa vẫn tạo "
+               "nhịp âm thanh (acoustic beating) dễ nhận biết.")
+    if ss.sound not in SOUNDS:
+        ss.sound = list(SOUNDS.keys())[0]
+    ss.sound = st.selectbox("Chọn âm thanh", list(SOUNDS.keys()),
                             index=list(SOUNDS.keys()).index(ss.sound))
     if st.button("▶️ Nghe thử"):
-        play_sound(SOUNDS[ss.sound])
+        play_sound(SOUNDS[ss.sound], loop=False)
 
 
 # ════════════════════════ MAIN ════════════════════════
@@ -420,11 +465,13 @@ def main():
         ss.page = st.radio("Màn hình", ["Dashboard", "Alert", "Analytics"],
                            index=["Dashboard", "Alert", "Analytics"].index(ss.page))
         st.divider()
+        st.caption(f"Camera: {'🎥 trực tiếp + 📸 ảnh' if WEBRTC_OK else '📸 ảnh chụp (web)'}")
         st.caption(f"CNN TFLite: {'✅ đã nạp' if TFLITE else '— (EAR/MAR)'}")
 
-    if not DEPS_OK:
-        st.error("Thiếu thư viện. Cài: `pip install -r requirements-streamlit.txt`")
-        st.code(DEPS_ERR); return
+    if not CORE_OK:
+        st.error("Thiếu thư viện lõi (opencv-python-headless, mediapipe). "
+                 "Cài: `pip install -r requirements.txt`")
+        st.code(CORE_ERR); return
 
     {"Dashboard": page_dashboard, "Alert": page_alert, "Analytics": page_analytics}[ss.page]()
 

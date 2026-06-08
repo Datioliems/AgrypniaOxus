@@ -151,6 +151,8 @@ class MainActivity : ComponentActivity() {
     private fun updateStats(status: DriverStatus) {
         val now = System.currentTimeMillis()
         if (sessionStart == 0L) sessionStart = now
+        // Cập nhật thời gian lái liên tục để AlertController nhắc nghỉ ở mốc 2h và 4h
+        alertController.updateDrivingTime(((now - sessionStart) / 60000L).toInt())
         if (status.state == DriverState.DROWSY) {
             drowsyMs += 100L
             if (prevState != DriverState.DROWSY) {

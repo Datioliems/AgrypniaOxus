@@ -32,19 +32,30 @@ class AlertController(private val context: Context) {
     private var drowsyStreakStart = 0L
     private var drivingMinutes = 0
     private var lastRestNudgeAt = 0L
+    private var restMark = 0   // mốc nghỉ đã nhắc (0 → 2h → 4h)
 
     // Binaural beta-beat sinh sẵn: L=carrier, R=carrier+18Hz (∈ beta 13–21Hz). 2 mức nhỏ/to.
     private val betaSoft by lazy { binauralPcm(carrier = 200.0, beat = 18.0, ms = 1400, vol = 0.55f) }
     private val betaLoud by lazy { binauralPcm(carrier = 220.0, beat = 18.0, ms = 2200, vol = 0.95f) }
 
-    /** Cập nhật thời gian lái (phút) để nhắc nghỉ sau 2h (Wang 2014). Gọi từ MainActivity nếu có. */
+    /** Cập nhật thời gian lái (phút) để nhắc nghỉ ở mốc 2h và 4h (Wang 2014). Gọi từ MainActivity. */
     fun updateDrivingTime(minutes: Int) { drivingMinutes = minutes }
 
     fun update(status: DriverStatus) {
         val now = System.currentTimeMillis()
 
-        // Nhắc nghỉ khi lái > 120 phút (mỗi 10 phút nhắc 1 lần)
-        if (drivingMinutes >= 120 && now - lastRestNudgeAt > 600_000L) {
+        // Nhắc nghỉ ở MỐC 2 GIỜ và 4 GIỜ lái liên tục (CK AI §1.3); 4h mạnh hơn 2h.
+        val mark = when {
+            drivingMinutes >= 240 -> 4
+            drivingMinutes >= 120 -> 2
+            else -> 0
+        }
+        if (mark > restMark) {                       // lần đầu chạm mốc → cảnh báo nghỉ mạnh
+            restMark = mark
+            lastRestNudgeAt = now
+            playBinaural(if (mark >= 4) betaLoud else betaSoft)
+            vibrate(if (mark >= 4) longArrayOf(0, 400, 200, 400, 200, 400) else longArrayOf(0, 300, 150, 300))
+        } else if (mark > 0 && now - lastRestNudgeAt > 600_000L) {  // sau đó nhắc lại mỗi 10 phút
             lastRestNudgeAt = now
             tone.startTone(ToneGenerator.TONE_PROP_PROMPT, 300)
         }

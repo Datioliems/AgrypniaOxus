@@ -1,17 +1,15 @@
-# DrowsyDriver — Streamlit demo (3 màn hình) dependencies
-# Cài local:  pip install -r requirements-streamlit.txt
-# Deploy:     Streamlit Community Cloud đọc file này tự cài
+# DrowsyDriver — Streamlit (deploy-safe). Streamlit Community Cloud đọc file này.
+# App chạy đầy đủ bằng chế độ CHỤP ẢNH (st.camera_input) — KHÔNG cần WebRTC.
 
 streamlit>=1.35
 numpy>=1.26
 pillow>=10.0
 pandas>=2.0
+opencv-python-headless>=4.8   # headless: hợp cloud (KHÔNG dùng opencv-python để tránh lỗi libGL)
+mediapipe>=0.10.0             # FaceLandmarker → EAR/MAR
 
-# ─── Camera realtime + xử lý frame ───
-streamlit-webrtc>=0.47        # webcam live trong trình duyệt
-av>=11.0                      # decode video frame cho webrtc
-opencv-python-headless>=4.8   # headless: hợp deploy cloud (KHÔNG dùng opencv-python để tránh lỗi libGL)
-mediapipe>=0.10.0             # FaceMesh → EAR/MAR
-
-# ─── CNN TFLite (TÙY CHỌN — nặng, bỏ comment nếu muốn chạy thêm CNN) ───
-# tensorflow-cpu>=2.15        # hoặc tflite-runtime cho nhẹ hơn
+# ─── TÙY CHỌN: camera TRỰC TIẾP (WebRTC). Thiếu vẫn chạy đầy đủ bằng chế độ chụp ảnh. ───
+# Hai gói này hay gây LỖI BUILD trên Streamlit Cloud (av cần ffmpeg, webrtc cần TURN server)
+# → để mặc định TẮT cho deploy ổn định. Bỏ comment nếu chạy LOCAL và muốn xem camera trực tiếp.
+# streamlit-webrtc>=0.47
+# av>=11.0
