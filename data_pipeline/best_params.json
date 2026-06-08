@@ -1,0 +1,51 @@
+{
+  "_note": "Bo tham so tot nhat cho model CNN phan loai mat (eyes_closed/eyes_open). Da dat test accuracy ~0.9866.",
+  "classes": ["eyes_closed", "eyes_open"],
+  "sources": {
+    "eyes_open": "mrleyedataset/Open-Eyes",
+    "eyes_closed": "mrleyedataset/Close-Eyes"
+  },
+  "split": {
+    "train": 0.70,
+    "val": 0.15,
+    "test": 0.15,
+    "seed": 42
+  },
+  "preprocess": {
+    "image_size": 64,
+    "normalization": "divide_by_255_in_pipeline",
+    "normalization_note": "KHONG dat lop Rescaling trong model -> tranh normalize 2 lan",
+    "augmentation": {
+      "random_flip": "horizontal",
+      "random_rotation": 0.05,
+      "random_zoom": 0.10,
+      "random_contrast": 0.20
+    }
+  },
+  "train": {
+    "batch_size": 32,
+    "epochs": 25,
+    "learning_rate": 0.001,
+    "optimizer": "adam",
+    "loss": "categorical_crossentropy",
+    "dropout": 0.3,
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 4,
+      "restore_best_weights": true
+    }
+  },
+  "architecture": [
+    "Input(64,64,3)",
+    "Conv2D(32,3,relu) -> BatchNorm -> MaxPool",
+    "Conv2D(64,3,relu) -> BatchNorm -> MaxPool",
+    "Conv2D(128,3,relu) -> BatchNorm -> GlobalAveragePooling",
+    "Dropout(0.3)",
+    "Dense(2, softmax)"
+  ],
+  "result": {
+    "test_accuracy": 0.9866,
+    "eyes_closed": {"precision": 0.9861, "recall": 0.9869, "f1": 0.9865},
+    "eyes_open": {"precision": 0.9872, "recall": 0.9864, "f1": 0.9868}
+  }
+}

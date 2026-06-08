@@ -28,9 +28,24 @@ roboflow_data/
 *.tflite
 
 # Dataset (khong commit)
+dataset/
 dataset_mrl/
 dataset_yawn/
+mrleyedataset/
 rawdata/
+
+# Du lieu sinh ra / outputs lon (khong commit)
+data/
+outputs/
+output/
+videos/
+evidence/
+DrowsyDriver_3H_Deployment/
+mau_thiet_ke/
+.playwright-cli/
+*.apk
+*.pth
+*.keras
 
 # Jupyter
 .ipynb_checkpoints/

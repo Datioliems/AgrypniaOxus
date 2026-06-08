@@ -179,8 +179,7 @@ if best_model_path.exists():
 else:
     eval_model = model
 
-results = eval_model.evaluate(test_ds, verbose=1)
-metrics_dict = dict(zip(eval_model.metrics_names, results))
+metrics_dict = eval_model.evaluate(test_ds, verbose=1, return_dict=True)
 
 print("\n=== KET QUA TEST SET ===")
 print(f"  Loss      : {metrics_dict.get('loss', 0):.4f}")
@@ -194,6 +193,27 @@ gap = abs(val_acc - test_acc)
 print(f"\n  Val acc   : {val_acc*100:.2f}%")
 print(f"  Test acc  : {test_acc*100:.2f}%")
 print(f"  Gap       : {gap*100:.2f}% {'[OK]' if gap < 0.05 else '[Kiem tra overfitting]'}")
+
+pred_probs = eval_model.predict(test_ds, verbose=0)
+y_pred = np.argmax(pred_probs, axis=1)
+y_true = np.concatenate([np.argmax(y.numpy(), axis=1) for _, y in test_ds], axis=0)
+cm = tf.math.confusion_matrix(y_true, y_pred, num_classes=len(CLASS_NAMES)).numpy()
+per_class_metrics = {}
+print("\n=== PER-CLASS METRICS ===")
+for i, name in enumerate(CLASS_NAMES):
+    tp = int(cm[i, i])
+    fp = int(cm[:, i].sum() - tp)
+    fn = int(cm[i, :].sum() - tp)
+    precision_i = tp / max(tp + fp, 1)
+    recall_i = tp / max(tp + fn, 1)
+    f1_i = 2 * precision_i * recall_i / max(precision_i + recall_i, 1e-12)
+    per_class_metrics[name] = {
+        "precision": round(float(precision_i), 6),
+        "recall": round(float(recall_i), 6),
+        "f1": round(float(f1_i), 6),
+        "support": int(cm[i, :].sum()),
+    }
+    print(f"  {name:<12} precision={precision_i*100:.2f}% recall={recall_i*100:.2f}% f1={f1_i*100:.2f}%")
 
 # %% Cell 7 — Export TFLite + kiem tra
 import tensorflow as tf, json
@@ -231,6 +251,11 @@ summary = {
     "classes": CLASS_NAMES,
     "image_size": IMAGE_SIZE,
     "best_val_accuracy": round(max(history.history["val_accuracy"]), 6),
+    "test_accuracy": round(float(metrics_dict.get("accuracy", 0)), 6),
+    "test_precision": round(float(metrics_dict.get("precision", 0)), 6),
+    "test_recall": round(float(metrics_dict.get("recall", 0)), 6),
+    "per_class_metrics": per_class_metrics,
+    "confusion_matrix": cm.tolist(),
     "tflite_path": str(TFLITE_OUT),
     "tflite_kb": round(tflite_kb, 1),
 }

@@ -1,0 +1,67 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "00 Install Python requirements",
+      "type": "shell",
+      "command": "python -m pip install -r requirements_notebook.txt",
+      "problemMatcher": []
+    },
+    {
+      "label": "01 EDA eye dataset",
+      "type": "shell",
+      "command": "python tools\\eda_eye_dataset.py --data dataset --out outputs\\eda",
+      "problemMatcher": []
+    },
+    {
+      "label": "02 Train CNN Eye -> Android TFLite",
+      "type": "shell",
+      "command": "python tools\\train_eye_classifier.py --data dataset --out app\\src\\main\\assets\\drowsiness_model.tflite --epochs 12",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "03 Evaluate CNN Eye",
+      "type": "shell",
+      "command": "python tools\\evaluate_eye_classifier.py --data dataset --tflite app\\src\\main\\assets\\drowsiness_model.tflite",
+      "problemMatcher": []
+    },
+    {
+      "label": "04 Export CNN Eye -> iPhone PWA",
+      "type": "shell",
+      "command": "python tools\\export_cnn_eye_web_weights.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "05 Train CNN Yawn -> Android TFLite",
+      "type": "shell",
+      "command": "python train_cnn_yawn.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "06 Check PyTorch CUDA",
+      "type": "shell",
+      "command": "python -c \"import torch; print('torch', torch.__version__); print('cuda', torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU only')\"",
+      "problemMatcher": []
+    },
+    {
+      "label": "07 Train YOLO local",
+      "type": "shell",
+      "command": "python tools\\train_yolov8_local.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "08 Run iPhone PWA server",
+      "type": "shell",
+      "command": "python tools\\run_iphone_pwa_server.py --host 0.0.0.0 --port 8502",
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "09 Verify project",
+      "type": "shell",
+      "command": "python tools\\verify_project.py",
+      "problemMatcher": []
+    }
+  ]
+}

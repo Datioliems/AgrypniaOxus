@@ -34,6 +34,8 @@ NOTEBOOK_FILES = [
     "notebook_full_pipeline.py",
     "notebook_multi_model.py",
     "colab_yolo26_training.py",
+    "colab_drowsy_yolo26.py",          # YOLO26 fixed (format yolov8, DATA_YAML)
+    "colab_yolo_transformer.py",       # YOLO + Transformer experiments (A/B/C/D)
 ]
 
 

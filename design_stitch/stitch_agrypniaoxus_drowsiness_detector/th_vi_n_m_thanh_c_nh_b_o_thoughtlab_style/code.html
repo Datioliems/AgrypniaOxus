@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgrypniaOxus | Alert Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        body {
+            background-color: #0a0a0a;
+            color: #e5e2e1;
+            font-family: 'Hanken Grotesk', sans-serif;
+            min-height: 100dvh;
+        }
+
+        .orb-blur {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(252, 28, 70, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            filter: blur(60px);
+            pointer-events: none;
+            z-index: 0;
+            top: 10%;
+            right: -150px;
+        }
+
+        .waveform-bar {
+            transition: height 0.3s ease;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #2a2a2a;
+            height: 2px;
+            border-radius: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #fc1c46;
+            margin-top: -5px;
+            box-shadow: 0 0 10px rgba(252, 28, 70, 0.4);
+            cursor: pointer;
+        }
+
+        .active-selection {
+            color: #fc1c46 !important;
+        }
+        
+        .active-border {
+            border-color: #fc1c46 !important;
+        }
+
+        .pill-btn {
+            border-radius: 9999px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "graphite": "#4c4c4c",
+                        "signal-red": "#fc1c46",
+                        "void": "#000000",
+                        "background": "#0a0a0a",
+                        "surface": "#131313",
+                        "ash": "#cccccc",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e7bcbc",
+                        "outline": "#ae8787",
+                    },
+                    "spacing": {
+                        "section-gap-min": "86px",
+                        "section-gap-max": "108px",
+                        "margin-mobile": "24px",
+                    },
+                    "fontSize": {
+                        "display": ["91px", {"lineHeight": "0.96", "letterSpacing": "-0.04em", "fontWeight": "300"}],
+                        "headline-lg-mobile": ["48px", {"lineHeight": "1.0", "letterSpacing": "-0.02em", "fontWeight": "300"}],
+                        "heading-sm": ["27px", {"lineHeight": "1.15", "letterSpacing": "-0.009em", "fontWeight": "400"}],
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<div class="orb-blur"></div>
+<!-- Header Navigation -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md flex justify-between items-center px-margin-mobile h-16 border-b border-white/5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-signal-red" data-icon="sensors">sensors</span>
+<span class="font-semibold text-sm tracking-widest uppercase">AgrypniaOxus</span>
+</div>
+<span class="material-symbols-outlined text-ash" data-icon="more_vert">more_vert</span>
+</header>
+<main class="pt-32 pb-40 px-margin-mobile max-w-xl mx-auto overflow-hidden relative z-10">
+<!-- Display Title -->
+<section class="mb-section-gap-min">
+<h1 class="text-headline-lg-mobile md:text-display text-on-surface uppercase mb-4">Alert Library</h1>
+<p class="text-ash/60 text-lg max-w-sm">Precision audio calibration for high-vigilance night driving.</p>
+</section>
+<!-- Master Control -->
+<section class="mb-section-gap-min space-y-6">
+<div class="flex justify-between items-end">
+<span class="text-xs uppercase tracking-[0.2em] text-ash/40">Master Volume</span>
+<span class="text-xs font-mono text-signal-red" id="volume-value">75%</span>
+</div>
+<input class="w-full" id="volume-slider" max="100" min="0" type="range" value="75"/>
+</section>
+<!-- Alert Items List -->
+<section class="space-y-[86px]">
+<!-- Alert Card: Siren Blast -->
+<div class="group">
+<div class="flex justify-between items-start mb-6">
+<div class="space-y-1">
+<h3 class="text-heading-sm text-on-surface">Siren Blast</h3>
+<p class="text-[10px] uppercase tracking-widest text-ash/40">Urgency: Critical</p>
+</div>
+<label class="relative flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" name="alert-select" type="radio"/>
+<div class="w-5 h-5 border border-ash/20 rounded-full peer-checked:border-signal-red peer-checked:bg-signal-red/10 transition-all flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-signal-red opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+</div>
+</label>
+</div>
+<div class="flex items-center gap-6">
+<button class="pill-btn w-20 h-10 border border-ash/20 flex items-center justify-center hover:bg-white/5 active:scale-95 transition-all" onclick="toggleAudio('siren')">
+<span class="material-symbols-outlined text-ash" data-icon="play_arrow" id="icon-siren">play_arrow</span>
+</button>
+<!-- Minimalist Waveform -->
+<div class="flex-1 flex items-center gap-1 h-8" id="viz-siren">
+<div class="flex-1 bg-ash/20 h-[2px]"></div>
+<div class="flex-1 bg-ash h-4 waveform-bar"></div>
+<div class="flex-1 bg-ash h-2 waveform-bar"></div>
+<div class="flex-1 bg-ash h-6 waveform-bar"></div>
+<div class="flex-1 bg-ash h-3 waveform-bar"></div>
+<div class="flex-1 bg-ash h-8 waveform-bar"></div>
+<div class="flex-1 bg-ash/20 h-[2px]"></div>
+</div>
+</div>
+</div>
+<!-- Alert Card: Pulse -->
+<div class="group">
+<div class="flex justify-between items-start mb-6">
+<div class="space-y-1">
+<h3 class="text-heading-sm text-on-surface">High-Freq Pulse</h3>
+<p class="text-[10px] uppercase tracking-widest text-ash/40">Urgency: Moderate</p>
+</div>
+<label class="relative flex items-center cursor-pointer">
+<input class="sr-only peer" name="alert-select" type="radio"/>
+<div class="w-5 h-5 border border-ash/20 rounded-full peer-checked:border-signal-red peer-checked:bg-signal-red/10 transition-all flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-signal-red opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+</div>
+</label>
+</div>
+<div class="flex items-center gap-6">
+<button class="pill-btn w-20 h-10 border border-ash/20 flex items-center justify-center hover:bg-white/5 active:scale-95 transition-all" onclick="toggleAudio('pulse')">
+<span class="material-symbols-outlined text-ash" data-icon="play_arrow" id="icon-pulse">play_arrow</span>
+</button>
+<!-- Minimalist Waveform -->
+<div class="flex-1 flex items-center gap-1 h-8" id="viz-pulse">
+<div class="flex-1 bg-ash h-1"></div>
+<div class="flex-1 bg-ash h-1"></div>
+<div class="flex-1 bg-ash h-4 waveform-bar"></div>
+<div class="flex-1 bg-ash h-1"></div>
+<div class="flex-1 bg-ash h-1"></div>
+<div class="flex-1 bg-ash h-4 waveform-bar"></div>
+<div class="flex-1 bg-ash h-1"></div>
+</div>
+</div>
+</div>
+<!-- Alert Card: Voice -->
+<div class="group">
+<div class="flex justify-between items-start mb-6">
+<div class="space-y-1">
+<h3 class="text-heading-sm text-on-surface">Voice Command</h3>
+<p class="text-[10px] uppercase tracking-widest text-ash/40">Urgency: Informative</p>
+</div>
+<label class="relative flex items-center cursor-pointer">
+<input class="sr-only peer" name="alert-select" type="radio"/>
+<div class="w-5 h-5 border border-ash/20 rounded-full peer-checked:border-signal-red peer-checked:bg-signal-red/10 transition-all flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-signal-red opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+</div>
+</label>
+</div>
+<div class="flex items-center gap-6">
+<button class="pill-btn w-20 h-10 border border-ash/20 flex items-center justify-center hover:bg-white/5 active:scale-95 transition-all" onclick="toggleAudio('voice')">
+<span class="material-symbols-outlined text-ash" data-icon="play_arrow" id="icon-voice">play_arrow</span>
+</button>
+<!-- Minimalist Line -->
+<div class="flex-1 h-[1px] bg-ash/20 relative overflow-hidden" id="viz-voice">
+<div class="absolute inset-0 bg-ash/60 -translate-x-full transition-transform duration-[3000ms] ease-linear" id="progress-voice"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Supporting Visual -->
+<div class="mt-section-gap-max opacity-40">
+<img alt="Audio landscape" class="w-full grayscale brightness-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDf_y8hcBVfX0ALbyWMMKu-LZsAGE5MTg_xKT44AmCgT3Xy5f-pxj1nyVTzoTRLbIAbplmDOlkwBNjtzjEijc9fiaC_F59Ov7Xo56qzBZu7NzjPFNKzA0gBwWz_Y3YN2lDZL_6bpGTPbfeyaj71oRQyb7K3G0dKgwVsYkgFcB0InT58wZjoGc2rdp1yyQ0TDKLpYdzKGGORy4Rjnuj12QMX5fo1ajwAyfwjU5qDsTdZLdh2TWXUz31Kh80U6xEhuJ0ShentZLF9iSRT"/>
+</div>
+</main>
+<!-- Navigation -->
+<nav class="fixed bottom-0 w-full z-50 bg-background/90 backdrop-blur-xl border-t border-white/5 h-20 flex justify-around items-center px-6">
+<a class="flex flex-col items-center gap-1 text-ash/40 hover:text-ash transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+<span class="text-[10px] uppercase tracking-tighter">Detection</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-ash/40 hover:text-ash transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="text-[10px] uppercase tracking-tighter">Analytics</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-signal-red" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[10px] uppercase tracking-tighter">Library</span>
+</a>
+</nav>
+<script>
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeValue = document.getElementById('volume-value');
+        
+        volumeSlider.addEventListener('input', (e) => {
+            volumeValue.textContent = `${e.target.value}%`;
+        });
+
+        let activeAudio = null;
+        
+        function toggleAudio(id) {
+            const icon = document.getElementById(`icon-${id}`);
+            
+            if (activeAudio === id) {
+                icon.textContent = 'play_arrow';
+                stopAnimation(id);
+                activeAudio = null;
+            } else {
+                if (activeAudio) {
+                    document.getElementById(`icon-${activeAudio}`).textContent = 'play_arrow';
+                    stopAnimation(activeAudio);
+                }
+                icon.textContent = 'pause';
+                startAnimation(id);
+                activeAudio = id;
+            }
+        }
+
+        function startAnimation(id) {
+            if (id === 'siren' || id === 'pulse') {
+                const bars = document.querySelectorAll(`#viz-${id} .waveform-bar`);
+                bars.forEach(bar => {
+                    bar.interval = setInterval(() => {
+                        bar.style.height = `${Math.floor(Math.random() * 24) + 4}px`;
+                    }, 150);
+                });
+            }
+            if (id === 'voice') {
+                const prog = document.getElementById('progress-voice');
+                prog.style.transform = 'translateX(0)';
+                setTimeout(() => { if(activeAudio === 'voice') toggleAudio('voice'); }, 3000);
+            }
+        }
+
+        function stopAnimation(id) {
+            if (id === 'siren' || id === 'pulse') {
+                const bars = document.querySelectorAll(`#viz-${id} .waveform-bar`);
+                bars.forEach(bar => {
+                    clearInterval(bar.interval);
+                    bar.style.height = id === 'siren' ? '8px' : '4px';
+                });
+            }
+            if (id === 'voice') {
+                const prog = document.getElementById('progress-voice');
+                prog.style.transition = 'none';
+                prog.style.transform = 'translateX(-100%)';
+                setTimeout(() => { prog.style.transition = 'transform 3000ms linear'; }, 50);
+            }
+        }
+    </script>
+</body></html>

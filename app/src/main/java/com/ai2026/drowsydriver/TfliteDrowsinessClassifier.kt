@@ -46,7 +46,7 @@ class TfliteDrowsinessClassifier(context: Context) {
          *   - Model mới chưa cực kỳ confident → 0.55 là hợp lý ban đầu
          *   - Sau khi test thực tế có thể tăng lên 0.65–0.70
          */
-        const val CNN_CONF_THRESHOLD = 0.55f
+        const val CNN_CONF_THRESHOLD = 0.52f   // hạ để CNN làm CHỦ ĐẠO (vào cuộc nhiều hơn); EAR/MAR chỉ fallback
 
         /** Class order PHẢI khớp với thứ tự alphabetical của folder trong dataset */
         val LABELS = arrayOf("eyes_closed", "eyes_open")

@@ -41,6 +41,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var alertController: AlertController
     private lateinit var eventLogger: EventLogger
     private val analyzer = DrowsinessAnalyzer()
+    private val sessionTracker = DriverSessionTracker()
     private var faceLandmarker: FaceLandmarker? = null
     private var tfliteClassifier: TfliteDrowsinessClassifier? = null
     private var yawnClassifier: YawnClassifier? = null
@@ -80,6 +81,7 @@ class MainActivity : ComponentActivity() {
         faceLandmarker?.close()
         tfliteClassifier?.close()
         yawnClassifier?.close()
+        alertController.close()
     }
 
     private fun setupUi() {
@@ -234,7 +236,8 @@ class MainActivity : ComponentActivity() {
         val yawnPrediction  = classifyMouthRoi(result)
         val status = buildHybridStatus(heuristicStatus, cnnPrediction, yawnPrediction, latencyMs)
         runOnUiThread {
-            overlayView.update(status)
+            val report = sessionTracker.update(status, SystemClock.uptimeMillis())
+            overlayView.update(status, report)
             alertController.update(status)
             eventLogger.logIfNeeded(status)
             if (status.state != DriverState.NO_FACE) {
@@ -268,42 +271,41 @@ class MainActivity : ComponentActivity() {
             else                  -> DriverState.AWAKE
         }
 
-        // ── Yawn detection: CNN Yawn hoặc MAR heuristic ────────────────────
+        // ── Ngáp: CNN Yawn CHỦ ĐẠO; MAR chỉ phụ khi KHÔNG có dự đoán CNN ───
         val cnnYawning   = yawnPrediction?.isYawning == true
         val marYawning   = heuristicStatus.state == DriverState.YAWNING
-        val isYawning    = cnnYawning || marYawning
+        val isYawning    = if (yawnPrediction != null) cnnYawning else marYawning
 
-        val shouldUseCnn = cnnPrediction != null &&
-            cnnPrediction.confidence >= TfliteDrowsinessClassifier.CNN_CONF_THRESHOLD &&
-            !isYawning
+        // CNN mắt đủ tin cậy để làm PHƯƠNG PHÁP CHÍNH?
+        val cnnUsable = cnnPrediction != null &&
+            cnnPrediction.confidence >= TfliteDrowsinessClassifier.CNN_CONF_THRESHOLD
 
-        // ── Fused state ────────────────────────────────────────────────────
+        // ── Fused state: CNN CHỦ ĐẠO, EAR/MAR chỉ FALLBACK ─────────────────
         val fusedState = when {
-            heuristicStatus.state == DriverState.NO_FACE                                       -> DriverState.NO_FACE
-            isYawning                                                                          -> DriverState.YAWNING
-            shouldUseCnn && cnnEyeState == DriverState.DROWSY                                  -> DriverState.DROWSY
-            shouldUseCnn && cnnEyeState == DriverState.EYES_CLOSED                            -> DriverState.EYES_CLOSED
-            heuristicStatus.state == DriverState.DROWSY                                        -> DriverState.DROWSY
-            heuristicStatus.state == DriverState.EYES_CLOSED && cnnPrediction?.label != "eyes_open" -> DriverState.EYES_CLOSED
-            shouldUseCnn && cnnEyeState == DriverState.AWAKE                                   -> DriverState.AWAKE
-            else                                                                               -> heuristicStatus.state
+            heuristicStatus.state == DriverState.NO_FACE -> DriverState.NO_FACE
+            isYawning                                    -> DriverState.YAWNING
+            // CNN mắt là phương pháp CHÍNH khi đủ tin cậy
+            cnnUsable -> when {
+                // Lưới an toàn: nếu EAR cũng khẳng định DROWSY thì giữ DROWSY (không bỏ sót)
+                cnnEyeState == DriverState.DROWSY ||
+                    heuristicStatus.state == DriverState.DROWSY -> DriverState.DROWSY
+                else -> cnnEyeState
+            }
+            // FALLBACK EAR/MAR chỉ khi CNN KHÔNG có / KHÔNG đủ tin cậy
+            else -> heuristicStatus.state
         }
 
         val fusedConfidence = when {
-            fusedState == DriverState.YAWNING && cnnYawning    -> yawnPrediction?.confidence ?: heuristicStatus.confidence
-            fusedState == DriverState.DROWSY && cnnEyeState == DriverState.DROWSY -> cnnPrediction?.confidence ?: heuristicStatus.confidence
-            fusedState == DriverState.EYES_CLOSED && cnnEyeState == DriverState.EYES_CLOSED -> cnnPrediction?.confidence ?: heuristicStatus.confidence
+            fusedState == DriverState.YAWNING && cnnYawning -> yawnPrediction?.confidence ?: heuristicStatus.confidence
+            cnnUsable && fusedState != DriverState.NO_FACE  -> cnnPrediction?.confidence ?: heuristicStatus.confidence
             else -> heuristicStatus.confidence
         }
 
         val alertSource = when {
-            cnnYawning && marYawning -> "CNN Yawn + MAR"
-            cnnYawning               -> "CNN Yawn"
-            marYawning               -> "MAR"
-            shouldUseCnn && (cnnEyeState == DriverState.DROWSY || cnnEyeState == DriverState.EYES_CLOSED) -> "CNN Eye + temporal"
-            heuristicStatus.state == DriverState.DROWSY || heuristicStatus.state == DriverState.EYES_CLOSED -> "EAR/MAR fallback"
-            shouldUseCnn             -> "CNN Eye"
-            else                     -> "EAR/MAR"
+            cnnYawning -> "CNN Yawn (primary)"
+            marYawning -> "MAR (fallback)"
+            cnnUsable  -> "CNN Eye (primary)"
+            else       -> "EAR/MAR (fallback)"
         }
 
         return heuristicStatus.copy(
