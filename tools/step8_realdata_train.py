@@ -16,7 +16,7 @@ from tensorflow.keras import layers, models
 
 # File đã copy sẵn bằng bash sang path ASCII (tránh lỗi Unicode cv2/os trên Windows):
 #   /tmp/s8prep/{awake,closed_1,yawn_1}.mp4 + /tmp/s8prep/closed_zip/
-WORK = "/tmp/s8prep"
+WORK = "_s8tmp"   # path tương đối project — bash & python cùng hiểu (tránh /tmp khác namespace)
 CLOSED_EXTRA = f"{WORK}/closed_zip"
 shutil.rmtree(f"{WORK}/eye", ignore_errors=True)
 shutil.rmtree(f"{WORK}/yawn", ignore_errors=True)
@@ -97,20 +97,27 @@ nn = save_mouth_crops(frames_of_video(f"{WORK}/awake.mp4"), f"{YAWN}/no_yawn")
 ny = save_mouth_crops(frames_of_video(f"{WORK}/yawn_1.mp4"), f"{YAWN}/yawn")
 print(f"  no_yawn={nn}  yawn={ny}")
 
-def train_cnn(data_dir, classes, out_tflite, epochs=25):
+def train_cnn(data_dir, classes, out_tflite, epochs=20):
+    # Data ít + frame gần trùng → KHÔNG dùng BatchNorm (gây gap train/val), thêm augmentation
+    # + class_weight (cân bằng lớp) + dropout cao để chống overfit.
     tr = tf.keras.utils.image_dataset_from_directory(data_dir, image_size=(64,64), batch_size=16,
-            label_mode="categorical", class_names=classes, validation_split=0.2, subset="training", seed=42)
+            label_mode="categorical", class_names=classes, validation_split=0.25, subset="training", seed=123, shuffle=True)
     va = tf.keras.utils.image_dataset_from_directory(data_dir, image_size=(64,64), batch_size=16,
-            label_mode="categorical", class_names=classes, validation_split=0.2, subset="validation", seed=42)
+            label_mode="categorical", class_names=classes, validation_split=0.25, subset="validation", seed=123, shuffle=True)
+    cnt = [len(glob.glob(f"{data_dir}/{c}/*.jpg")) for c in classes]
+    tot = sum(cnt); cw = {i: tot/(len(classes)*max(cnt[i],1)) for i in range(len(classes))}
+    aug = models.Sequential([layers.RandomFlip("horizontal"), layers.RandomRotation(0.08),
+                             layers.RandomBrightness(0.2), layers.RandomZoom(0.1)])
     norm = layers.Rescaling(1./255)
-    tr = tr.map(lambda x,y:(norm(x),y)).cache().prefetch(2); va = va.map(lambda x,y:(norm(x),y)).cache().prefetch(2)
+    tr = tr.map(lambda x,y:(norm(aug(x)),y)).cache().prefetch(2); va = va.map(lambda x,y:(norm(x),y)).cache().prefetch(2)
     m = models.Sequential([layers.Input((64,64,3)),
-        layers.Conv2D(32,3,activation="relu",padding="same"), layers.BatchNormalization(), layers.MaxPool2D(),
-        layers.Conv2D(64,3,activation="relu",padding="same"), layers.BatchNormalization(), layers.GlobalAveragePooling2D(),
-        layers.Dense(64,activation="relu"), layers.Dropout(0.4), layers.Dense(len(classes),activation="softmax")])
+        layers.Conv2D(16,3,activation="relu",padding="same"), layers.MaxPool2D(),
+        layers.Conv2D(32,3,activation="relu",padding="same"), layers.MaxPool2D(),
+        layers.Conv2D(64,3,activation="relu",padding="same"), layers.GlobalAveragePooling2D(),
+        layers.Dropout(0.5), layers.Dense(len(classes),activation="softmax")])
     m.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
-    h = m.fit(tr, validation_data=va, epochs=epochs,
-              callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=6, restore_best_weights=True)], verbose=2)
+    h = m.fit(tr, validation_data=va, epochs=epochs, class_weight=cw,
+              callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=8, restore_best_weights=True)], verbose=2)
     open(out_tflite, "wb").write(tf.lite.TFLiteConverter.from_keras_model(m).convert())
     return max(h.history["val_accuracy"])
 
