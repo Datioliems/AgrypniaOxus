@@ -15,6 +15,10 @@ const code = (lines) => new Paragraph({ spacing: { before: 80, after: 120 }, sha
   children: lines.flatMap((l, i) => [new TextRun({ text: l, font: "Consolas", size: 19, break: i ? 1 : 0 })]) });
 const center = (t, mono) => new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 80, after: 120 }, children: [new TextRun(mono ? { text: t, font: "Consolas", size: 20 } : { text: t, italics: true })] });
 const eqfig = (file, w, h) => new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100, after: 140 }, children: [new ImageRun({ type: "png", data: img(file), transformation: { width: w, height: h } })] });
+const figc = (file, cap, w, h) => [
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120 }, children: [new ImageRun({ type: "png", data: fs.readFileSync(`outputs/pipeline_steps/${file}`), transformation: { width: w, height: h } })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 160 }, children: [new TextRun({ text: cap, italics: true, size: 24 })] }),
+];
 const refP = (t) => new Paragraph({ spacing: { after: 80 }, indent: { left: 600, hanging: 600 }, children: [new TextRun({ text: t, size: 24 })] });
 
 // ───────── Bảng ─────────
@@ -139,6 +143,8 @@ const doc = new Document({
       lead("Thay đổi kích thước ảnh (Resizing): ", "Tất cả hình ảnh mắt được đưa về kích thước cố định 64×64 pixel thông qua phép nội suy song tuyến tính (bilinear interpolation) do hàm tf.image.resize xử lý. Kích thước 64×64 nhỏ đủ để mô hình CNN nhẹ hoạt động ở tốc độ cao trên Android, nhưng đủ lớn để bảo toàn các đặc trưng hình học quan trọng như đường biên mí mắt, vùng lòng trắng và con ngươi."),
       lead("Chuẩn hóa giá trị điểm ảnh (Normalization): ", "Sau khi resize, giá trị mỗi điểm ảnh trong khoảng nguyên [0, 255] được chuyển sang số thực và chia cho 255.0, đưa về đoạn [0.0, 1.0]. Phép chuẩn hóa này triệt tiêu chênh lệch biên độ lớn, giúp thuật toán Adam tính gradient ổn định và hội tụ nhanh hơn. Điểm kỹ thuật quan trọng là chuẩn hóa được thực hiện bên ngoài mô hình Keras (trong luồng tf.data), không đặt lớp Rescaling bên trong mô hình. Lý do là khi xuất sang TensorFlow Lite chạy trên Android, nếu chuẩn hóa được nhúng vào mô hình mà ứng dụng vẫn chuẩn hóa thêm một lần nữa sẽ gây lỗi chuẩn hóa hai lần và cho kết quả sai hoàn toàn. Cách chuẩn hóa ngoài mô hình bảo đảm nhất quán tuyệt đối giữa pipeline huấn luyện Python và pipeline suy luận Kotlin trên Android."),
       lead("Mã hóa nhãn dạng One-hot (One-hot Encoding): ", "Các nhãn lớp được chuyển thành vector nhị phân bằng hàm to_categorical của Keras: lớp eyes_closed (index 0) ứng với [1, 0] và eyes_open (index 1) ứng với [0, 1]. Dạng mã hóa này cần thiết để kết hợp với hàm mất mát categorical_crossentropy và lớp đầu ra Dense(2, activation='softmax')."),
+      ...figc("step4_resize.png", "Hình 2.1. Minh họa phép thay đổi kích thước vùng quan tâm về 64×64 pixel", 450, 175),
+      ...figc("step8_normalize.png", "Hình 2.2. Minh họa phép chuẩn hóa điểm ảnh từ [0, 255] về [0, 1]", 450, 191),
       H(3, "Kỹ thuật chưa học trên lớp"),
       body("Nhóm kỹ thuật thứ hai bao gồm các phương pháp nâng cao chưa được đề cập trong chương trình học, được nhóm tự nghiên cứu và áp dụng nhằm giải quyết các vấn đề đặc thù của bộ MRL."),
       lead("Trích xuất mã đối tượng bằng biểu thức chính quy (Regular Expression): ", "Để phân chia theo đối tượng, hệ thống cần nhận diện ảnh nào thuộc về người nào từ tên tệp. Kỹ thuật Regex [3] được áp dụng để trích xuất tiền tố mã đối tượng dạng s#### một cách chính xác và hiệu quả:"),
@@ -189,6 +195,7 @@ const doc = new Document({
         "], name='augmentation')",
       ]),
       body("Phép lật ngang mô phỏng khác biệt giữa mắt trái và mắt phải. Xoay nhẹ mô phỏng nghiêng đầu của tài xế. Thay đổi độ sáng và tương phản mô phỏng biến đổi chiếu sáng trong cabin. Thu phóng mô phỏng thay đổi khoảng cách camera. Toàn bộ được áp dụng sau bước batch hóa để tối ưu hiệu năng GPU."),
+      ...figc("step6_augment.png", "Hình 2.3. Minh họa các phép tăng cường dữ liệu: lật ngang, xoay, tăng giảm độ sáng", 470, 110),
       lead("Tính toán trọng số lớp tùy biến (Custom Class Weight): ", "Trong bài toán cảnh báo buồn ngủ, bỏ sót một trường hợp nhắm mắt thật (False Negative của lớp eyes_closed) nguy hiểm hơn nhiều so với cảnh báo nhầm. Do đó nhóm ưu tiên tối đa hóa Recall của lớp eyes_closed bằng cách gán trọng số huấn luyện lớn hơn, tính động theo tần suất lớp kết hợp hệ số ưu tiên 1.3 [6]:"),
       eqfig("eq_classweight.png", 470, 60),
       body("trong đó N_train là tổng số mẫu tập Train, N_closed và N_open là số mẫu mỗi lớp. Hệ số 1.3 là siêu tham số chọn theo thực nghiệm: quá lớn sẽ khiến mô hình cảnh báo nhầm liên tục, quá nhỏ sẽ không cải thiện được Recall. Ở mức 1.3, mô hình đạt cân bằng giữa độ nhạy phát hiện buồn ngủ và tỉ lệ báo động giả chấp nhận được khi chạy thực tế trên Android."),
@@ -238,6 +245,7 @@ const doc = new Document({
         "    return cv2.resize(crop, (64, 64)) if crop.size else None",
       ]),
       body("Hệ số đệm (pad_x, pad_y bằng 0.5) mở rộng khung cắt ra 50% mỗi chiều so với viền môi, nhằm giữ lại phần cằm và cơ quanh miệng — những vùng co giãn rõ rệt khi ngáp, giúp mô hình phân biệt tốt hơn giữa ngáp thật và việc chỉ mở miệng nói chuyện."),
+      ...figc("step3_roi.png", "Hình 2.4. Minh họa cắt vùng mắt và miệng từ điểm mốc khuôn mặt MediaPipe", 470, 132),
       lead("Đặc trưng hình học bổ trợ MAR (Mouth Aspect Ratio): ", "Song song với CNN, nhóm tính thêm tỉ lệ khung hình miệng (MAR) trực tiếp từ các điểm mốc, theo công thức:"),
       eqfig("eq_mar.png", 230, 69),
       body("Giá trị MAR tăng vọt khi miệng há rộng theo chiều dọc lúc ngáp. Đặc trưng hình học này đóng vai trò lớp an toàn dự phòng: khi CNN không đủ tin cậy, hệ thống vẫn có thể dựa vào ngưỡng MAR để phát hiện ngáp; cơ chế hợp nhất sẽ được trình bày trong Chương 3."),
@@ -254,6 +262,7 @@ const doc = new Document({
       body("Bộ dữ liệu phát hiện đối tượng mang tên Datio_yolo do chính nhóm xây dựng và quản lý trên nền tảng Roboflow [9] (không gian làm việc nguyen-tuan-dat, giấy phép CC BY 4.0). Đây là tập ảnh màu chụp khuôn mặt tài xế trong khoang lái, được gán nhãn theo sáu lớp đối tượng tương ứng với trạng thái của từng mắt và miệng. Bộ dữ liệu gồm 1.448 ảnh với tổng cộng 3.965 khung bao đối tượng, được phân chia sẵn thành hai tập huấn luyện và kiểm định. Sáu lớp đối tượng và ý nghĩa được trình bày trong Bảng 2.5."),
       tcap("Bảng 2.5. Ý nghĩa sáu lớp đối tượng của bộ dữ liệu Datio_yolo."),
       t25, body(""),
+      ...figc("step0_raw.png", "Hình 2.5. Một số ảnh thô RGB tiêu biểu của bộ dữ liệu Datio_yolo", 450, 242),
       H(3, "Phương pháp gán nhãn dữ liệu"),
       body("Khác với hai bộ dữ liệu phân loại ở trên (vốn có nhãn sẵn), bộ Datio_yolo được nhóm tự gán nhãn thủ công bằng công cụ chú thích trực tuyến của Roboflow. Với mỗi ảnh, nhóm vẽ một khung bao quanh từng đối tượng quan tâm (mắt trái, mắt phải, miệng) và chọn lớp tương ứng. Sau khi hoàn tất, Roboflow xuất nhãn theo định dạng YOLO: mỗi ảnh đi kèm một tệp văn bản .txt cùng tên, mỗi dòng mô tả một đối tượng theo cấu trúc gồm chỉ số lớp và bốn tọa độ khung bao đã chuẩn hóa về đoạn [0, 1]:"),
       center("class_id   x_center   y_center   width   height", true),
@@ -264,6 +273,10 @@ const doc = new Document({
       body("Qua thống kê thực tế (Bảng 2.6), nhóm phát hiện hai đặc điểm cần lưu ý. Thứ nhất, số khung bao lớn hơn số ảnh (2.733 box trên 1.008 ảnh huấn luyện), phản ánh đúng bản chất bài toán phát hiện đối tượng: mỗi ảnh thường chứa nhiều đối tượng cùng lúc (hai mắt và một miệng) — điểm khác biệt căn bản so với bài toán phân loại ở mục 2.1 và 2.2, nơi mỗi ảnh chỉ mang một nhãn. Thứ hai, có sự mất cân bằng phân bố lớp giữa hai tập: lớp no_yawn chiếm tới 647 box ở tập train nhưng chỉ 77 box ở tập valid, trong khi lớp yawn lại nhiều hơn ở tập valid. Sự lệch này cần được lưu ý khi diễn giải các chỉ số đánh giá theo lớp ở Chương 4."),
       tcap("Bảng 2.6. Phân bố khung bao theo lớp trên bộ dữ liệu Datio_yolo."),
       t26, body(""),
+      ...figc("step1_ingest.png", "Hình 2.6. Kiểm kê và phân bố kích thước ảnh của bộ dữ liệu Datio_yolo", 380, 220),
+      ...figc("step2_quality.png", "Hình 2.7. Lọc chất lượng ảnh theo độ nét (Laplacian) và độ sáng", 440, 210),
+      ...figc("step5_eda.png", "Hình 2.8. Phân bố số lượng nhãn theo sáu lớp đối tượng (EDA)", 420, 223),
+      ...figc("step7_split.png", "Hình 2.9. Phân chia tập huấn luyện, kiểm định và kiểm thử", 380, 236),
       H(2, "Tiền xử lý dữ liệu"),
       H(3, "Kỹ thuật đã học và thực hành trên lớp"),
       body("Các phép tiền xử lý cơ bản như thay đổi kích thước ảnh và chuẩn hóa giá trị điểm ảnh vẫn được áp dụng, nhưng đối với YOLO các bước này được thư viện Ultralytics tự động thực hiện bên trong pipeline huấn luyện. Cụ thể, mọi ảnh đầu vào được đưa về kích thước 640×640 pixel và giá trị điểm ảnh được chuẩn hóa về [0, 1] trước khi vào mạng. Nhóm chỉ cần khai báo siêu tham số imgsz=640, phần còn lại do framework đảm nhiệm."),
@@ -274,6 +287,7 @@ const doc = new Document({
       lead("Tăng cường dữ liệu trực tuyến đặc thù của YOLO: ", "YOLO áp dụng một tập kỹ thuật tăng cường dữ liệu mạnh ngay trong huấn luyện, nổi bật là Mosaic [11] — ghép bốn ảnh khác nhau thành một ảnh lớn để mô hình học được nhiều bối cảnh và tỉ lệ đối tượng trong một lần truyền, cùng với MixUp, biến đổi không gian màu HSV, lật ngang và dịch chuyển ngẫu nhiên. Toàn bộ được điều khiển tự động và tắt dần ở các epoch cuối để mô hình hội tụ ổn định."),
       lead("Học chuyển giao từ trọng số COCO (Transfer Learning): ", "Do bộ dữ liệu chỉ có hơn một nghìn ảnh, huấn luyện từ đầu sẽ dễ quá khớp. Nhóm khởi tạo mô hình từ trọng số yolo11s.pt đã được huấn luyện trước trên bộ COCO (80 lớp đối tượng phổ thông), sau đó tinh chỉnh lại trên sáu lớp của bài toán:"),
       code(["from ultralytics import YOLO", "model = YOLO('yolo11s.pt')               # nạp trọng số COCO", "model.train(data=f'{dataset.location}/data.yaml',", "            epochs=60, imgsz=640, batch=16)"]),
+      ...figc("step9_10_manifest.png", "Hình 2.10. Bảng kê dữ liệu (manifest) và kiểm tra tính toàn vẹn của bộ dữ liệu", 360, 259),
 
       // ════════ 2.4 YOLO26 ════════
       H(1, "Mô hình YOLO26 phát hiện đối tượng (Datio_yolo Dataset)"),

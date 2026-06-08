@@ -176,6 +176,38 @@ if DEPS_OK:
             return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
+# ───────────────────────── WebRTC config + fallback ảnh chụp ─────────────────────────
+# STUN giúp webrtc kết nối qua NAT/firewall (giảm lỗi "camera không lên").
+RTC_CONFIG = {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+
+
+@st.cache_resource
+def _cached_landmarker():
+    return _make_landmarker()
+
+
+def analyze_snapshot(pil_img, ear_thr, mar_thr):
+    """Phân tích 1 ảnh chụp (fallback khi WebRTC lỗi) → (status, ear, mar, ảnh chú thích BGR)."""
+    arr = np.array(pil_img.convert("RGB"))
+    img = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+    h, w = img.shape[:2]
+    res = _cached_landmarker().detect(
+        mp.Image(image_format=mp.ImageFormat.SRGB, data=arr))
+    if not res.face_landmarks:
+        return "NO FACE", 0.0, 0.0, img
+    lm = res.face_landmarks[0]
+    P = lambda i: (lm[i].x * w, lm[i].y * h)
+    ear = (_ear([P(i) for i in LEFT_EYE]) + _ear([P(i) for i in RIGHT_EYE])) / 2
+    mar = _mar(P(MOUTH[0]), P(MOUTH[1]), P(MOUTH[2]), P(MOUTH[3]))
+    status = "DROWSY" if ear < ear_thr else ("WARNING" if mar > mar_thr else "ALERT")
+    col = {"ALERT": (0, 200, 0), "WARNING": (0, 180, 230), "DROWSY": (0, 0, 255)}[status]
+    for i in LEFT_EYE + RIGHT_EYE:
+        cv2.circle(img, tuple(map(int, P(i))), 2, col, -1)
+    cv2.putText(img, f"EAR {ear:.2f}  MAR {mar:.2f}  {status}", (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, col, 2)
+    return status, ear, mar, img
+
+
 # ───────────────────────── CSS (theme đỏ–đen "Stitch") ─────────────────────────
 THEME_CSS = """
 <style>
@@ -231,14 +263,31 @@ def page_dashboard():
 
     with c1:
         ss.show_cam = st.toggle("📷 Hiện camera", value=ss.show_cam)
-        ctx = webrtc_streamer(
-            key="cam", mode=WebRtcMode.SENDRECV, video_processor_factory=Processor,
-            media_stream_constraints={"video": True, "audio": False},
-            async_processing=True)
-        if ctx.video_processor:
-            vp = ctx.video_processor
-            vp.ear_thr, vp.mar_thr = ss.ear_thr, ss.mar_thr
-            vp.closed_sec, vp.show = ss.closed_sec, ss.show_cam
+        ctx = None
+        try:
+            ctx = webrtc_streamer(
+                key="cam", mode=WebRtcMode.SENDRECV, video_processor_factory=Processor,
+                rtc_configuration=RTC_CONFIG,
+                media_stream_constraints={"video": True, "audio": False},
+                async_processing=True)
+            if ctx and ctx.video_processor:
+                vp = ctx.video_processor
+                vp.ear_thr, vp.mar_thr = ss.ear_thr, ss.mar_thr
+                vp.closed_sec, vp.show = ss.closed_sec, ss.show_cam
+        except Exception as e:                                  # webrtc lỗi → không sập app
+            st.warning(f"⚠️ Camera trực tiếp (WebRTC) không khả dụng. Dùng chế độ ảnh chụp bên dưới.\n\n{e}")
+
+        # Fallback luôn sẵn sàng: chụp 1 ảnh để phân tích (hoạt động kể cả khi WebRTC lỗi)
+        with st.expander("📸 Chế độ ảnh chụp (dùng khi camera trực tiếp lỗi)"):
+            snap = st.camera_input("Chụp ảnh khuôn mặt để phân tích nhanh")
+            if snap is not None:
+                from PIL import Image
+                s_status, s_ear, s_mar, s_img = analyze_snapshot(
+                    Image.open(snap), ss.ear_thr, ss.mar_thr)
+                st.image(cv2.cvtColor(s_img, cv2.COLOR_BGR2RGB), channels="RGB",
+                         caption=f"Kết quả: {s_status}  (EAR {s_ear:.2f} · MAR {s_mar:.2f})")
+                if ss.monitoring and s_status == "DROWSY":
+                    ss.page = "Alert"; st.rerun()
 
     with c2:
         ss.monitoring = st.toggle("🟢 KÍCH HOẠT GIÁM SÁT", value=ss.monitoring)
