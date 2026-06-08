@@ -59,8 +59,11 @@ demo = [
     ("img", f"{SHOTS}/analytics.png"),
     ("cap", "Hình 4.10. Màn hình báo cáo thống kê phiên lái: mức độ an toàn, chỉ số PERCLOS và số lần buồn ngủ"),
     ("p", "Màn hình báo cáo tổng hợp mức độ an toàn của phiên lái, thời gian lái, số lần buồn ngủ và ngáp, chỉ số PERCLOS (tỉ lệ thời gian nhắm mắt) cùng trạng thái của tính năng tự động gửi định vị, giúp tài xế tự theo dõi mức độ mệt mỏi của bản thân."),
+    ("img", f"{SHOTS}/analytics_hours2.png"),
+    ("cap", "Hình 4.11. Phân tích khung giờ hay buồn ngủ và khuyến cáo tránh lái xe vào khung giờ đó"),
+    ("p", "Một điểm nổi bật của màn hình báo cáo là chức năng phân tích khung giờ hay buồn ngủ. Hệ thống ghi nhận thời điểm xảy ra mỗi lần buồn ngủ và tích lũy thành biểu đồ phân bố theo 24 giờ trong ngày qua nhiều chuyến đi. Từ đó, ứng dụng xác định khung giờ mà tài xế hay buồn ngủ nhất (trong ví dụ là 14:00–15:00) và đưa ra khuyến cáo nên tránh lái xe vào những khung giờ đó, hãy nghỉ ngơi đầy đủ hoặc đổi tài xế. Đây là một biện pháp phòng ngừa chủ động dựa trên thói quen sinh học thực tế của từng người dùng, được triển khai trên cả ứng dụng Android và bản demo Streamlit."),
     ("img", f"{SHOTS}/emergency.png"),
-    ("cap", "Hình 4.11. Màn hình liên hệ khẩn cấp: tự động gửi vị trí cho người thân khi vượt ngưỡng buồn ngủ"),
+    ("cap", "Hình 4.12. Màn hình liên hệ khẩn cấp: tự động gửi vị trí cho người thân khi vượt ngưỡng buồn ngủ"),
     ("p", "Màn hình liên hệ khẩn cấp cho phép lưu thông tin người thân và đặt ngưỡng số lần buồn ngủ cho mỗi chuyến đi. Khi tài xế vượt ngưỡng, ứng dụng tự động gửi tin nhắn SMS kèm vị trí GPS (liên kết Google Maps) cho người thân mà không cần thao tác, tăng khả năng ứng cứu kịp thời."),
 ]
 import os

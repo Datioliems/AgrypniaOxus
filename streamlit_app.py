@@ -110,6 +110,37 @@ def play_sound(b64):
                 unsafe_allow_html=True)
 
 
+# ───────────────────────── Histogram khung giờ hay buồn ngủ ─────────────────────────
+import json
+HOURS_FILE = "drowsy_hours.json"
+
+
+def load_hours():
+    try:
+        with open(HOURS_FILE, "r", encoding="utf-8") as f:
+            h = json.load(f)
+        if isinstance(h, list) and len(h) == 24:
+            return [int(x) for x in h]
+    except Exception:
+        pass
+    return [0] * 24
+
+
+def save_hours(h):
+    try:
+        with open(HOURS_FILE, "w", encoding="utf-8") as f:
+            json.dump(h, f)
+    except Exception:
+        pass
+
+
+def bump_hour():
+    """Ghi nhận giờ hiện tại vào histogram (gọi khi phát hiện buồn ngủ)."""
+    ss = st.session_state
+    ss.hours[int(time.strftime("%H"))] += 1
+    save_hours(ss.hours)
+
+
 # ───────────────────────── State dùng chung ─────────────────────────
 def init_state():
     ss = st.session_state
@@ -121,6 +152,7 @@ def init_state():
     ss.setdefault("closed_sec", 1.5)
     ss.setdefault("sound", "Siren")
     ss.setdefault("history", [])
+    ss.setdefault("hours", load_hours())
 
 
 # ───────────────────────── Bộ xử lý video (chạy theo từng frame) ─────────────────────────
@@ -286,8 +318,10 @@ def page_dashboard():
                     Image.open(snap), ss.ear_thr, ss.mar_thr)
                 st.image(cv2.cvtColor(s_img, cv2.COLOR_BGR2RGB), channels="RGB",
                          caption=f"Kết quả: {s_status}  (EAR {s_ear:.2f} · MAR {s_mar:.2f})")
-                if ss.monitoring and s_status == "DROWSY":
-                    ss.page = "Alert"; st.rerun()
+                if s_status == "DROWSY":
+                    bump_hour()
+                    if ss.monitoring:
+                        ss.page = "Alert"; st.rerun()
 
     with c2:
         ss.monitoring = st.toggle("🟢 KÍCH HOẠT GIÁM SÁT", value=ss.monitoring)
@@ -306,6 +340,8 @@ def page_dashboard():
         if ss.monitoring and vp:
             if vp.event:
                 ss.history.append((time.strftime("%H:%M:%S"), vp.event[0], vp.event[1]))
+                if vp.event[0] == "Nhắm mắt":      # buồn ngủ → ghi khung giờ
+                    bump_hour()
             if vp.status == "DROWSY":
                 ss.page = "Alert"; st.rerun()
 
@@ -344,6 +380,21 @@ def page_analytics():
             ss.history = []; st.rerun()
     else:
         st.caption("Chưa có sự kiện nào. Bật giám sát ở Dashboard để ghi nhận.")
+
+    st.divider()
+    st.subheader("🕐 Khung giờ hay buồn ngủ")
+    hours = ss.hours
+    if sum(hours) == 0:
+        st.caption("Chưa đủ dữ liệu. Hệ thống sẽ tự học khung giờ bạn hay buồn ngủ để khuyến cáo tránh lái xe vào giờ đó.")
+    else:
+        import pandas as pd
+        peak = max(range(24), key=lambda i: hours[i])
+        st.markdown(f"**Bạn hay buồn ngủ nhất vào khoảng {peak:02d}:00–{(peak + 1) % 24:02d}:00** — {hours[peak]} lần.")
+        st.warning("⚠️ Nên tránh lái xe vào khung giờ này — hãy nghỉ ngơi đầy đủ hoặc đổi tài xế trước khi lái.")
+        dfh = pd.DataFrame({"Số lần buồn ngủ": hours}, index=[f"{h:02d}h" for h in range(24)])
+        st.bar_chart(dfh, color="#FC1C46")
+        if st.button("🗑️ Xóa dữ liệu khung giờ"):
+            ss.hours = [0] * 24; save_hours(ss.hours); st.rerun()
 
     st.divider()
     st.subheader("⚙️ Độ nhạy AI")

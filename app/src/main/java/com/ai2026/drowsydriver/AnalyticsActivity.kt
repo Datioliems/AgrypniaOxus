@@ -3,6 +3,7 @@ package com.ai2026.drowsydriver
 import android.app.Activity
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -107,6 +108,61 @@ class AnalyticsActivity : Activity() {
             if (autoSent) "✓ Đã gửi định vị lúc ${lastSentAt ?: "—"}" else "Chưa kích hoạt trong chuyến này",
             if (autoSent) UiKit.RED else UiKit.GREEN))
         content.addView(autoCard)
+
+        // 🕐 Khung giờ hay buồn ngủ (histogram 24 giờ tích lũy)
+        val hours = (p.getString("drowsy_hours", null)?.split(",")
+            ?.map { it.trim().toIntOrNull() ?: 0 } ?: List(24) { 0 }).let {
+            if (it.size >= 24) it.take(24) else it + List(24 - it.size) { 0 }
+        }
+        val totalH = hours.sum()
+        val hourCard = UiKit.card(this)
+        hourCard.addView(UiKit.title(this, "🕐 Khung giờ hay buồn ngủ", UiKit.TXT, 17f))
+        if (totalH == 0) {
+            hourCard.addView(TextView(this).apply {
+                text = "Chưa đủ dữ liệu. Hệ thống sẽ tự học khung giờ bạn hay buồn ngủ qua các chuyến đi để khuyến cáo tránh lái xe vào giờ đó."
+                setTextColor(UiKit.SUB); textSize = 13f
+                setPadding(0, UiKit.dp(this@AnalyticsActivity, 8), 0, 0)
+            })
+        } else {
+            val maxH = hours.maxOrNull() ?: 1
+            val peak = hours.indexOf(maxH)
+            hourCard.addView(TextView(this).apply {
+                text = "Bạn hay buồn ngủ nhất vào khoảng %02d:00–%02d:00 (%d lần).".format(peak, (peak + 1) % 24, maxH)
+                setTextColor(UiKit.TXT); textSize = 14f
+                setPadding(0, UiKit.dp(this@AnalyticsActivity, 8), 0, UiKit.dp(this@AnalyticsActivity, 4))
+            })
+            hourCard.addView(TextView(this).apply {
+                text = "⚠️ Nên tránh lái xe vào khung giờ này — hãy nghỉ ngơi đầy đủ hoặc đổi tài xế."
+                setTextColor(UiKit.AMBER); textSize = 13f
+                setPadding(0, 0, 0, UiKit.dp(this@AnalyticsActivity, 12))
+            })
+            val top = hours.withIndex().filter { it.value > 0 }.sortedByDescending { it.value }.take(5)
+            for ((h, c) in top) {
+                val frac = c.toFloat() / maxH
+                val row = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+                    setPadding(0, UiKit.dp(this@AnalyticsActivity, 3), 0, UiKit.dp(this@AnalyticsActivity, 3))
+                }
+                row.addView(TextView(this).apply {
+                    text = "%02d–%02dh".format(h, (h + 1) % 24)
+                    setTextColor(if (h == peak) UiKit.RED else UiKit.SUB); textSize = 12f
+                    layoutParams = LinearLayout.LayoutParams(UiKit.dp(this@AnalyticsActivity, 64), LinearLayout.LayoutParams.WRAP_CONTENT)
+                })
+                row.addView(View(this).apply {
+                    background = UiKit.rounded(if (h == peak) UiKit.RED else UiKit.AMBER, UiKit.dp(this@AnalyticsActivity, 6).toFloat())
+                    layoutParams = LinearLayout.LayoutParams(0, UiKit.dp(this@AnalyticsActivity, 12), frac)
+                })
+                row.addView(View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, 1, 1f - frac)
+                })
+                row.addView(TextView(this).apply {
+                    text = " $c"; setTextColor(UiKit.TXT); textSize = 12f
+                    layoutParams = LinearLayout.LayoutParams(UiKit.dp(this@AnalyticsActivity, 34), LinearLayout.LayoutParams.WRAP_CONTENT)
+                })
+                hourCard.addView(row)
+            }
+        }
+        content.addView(hourCard)
 
         // Khuyến cáo an toàn
         val tip = UiKit.card(this, UiKit.CARD2)

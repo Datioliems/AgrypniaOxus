@@ -155,6 +155,7 @@ class MainActivity : ComponentActivity() {
             drowsyMs += 100L
             if (prevState != DriverState.DROWSY) {
                 drowsyCount++
+                recordDrowsyHour()
                 maybeAutoSendLocation()
             }
         }
@@ -170,6 +171,20 @@ class MainActivity : ComponentActivity() {
             if (status.state == DriverState.DROWSY) e.putString("last_drowsy_at", ts)
             e.apply()
         }
+    }
+
+    /**
+     * Ghi nhận GIỜ trong ngày xảy ra buồn ngủ vào histogram 24 giờ (tích lũy qua mọi chuyến),
+     * phục vụ phân tích khung giờ tài xế hay buồn ngủ để khuyến cáo tránh lái xe giờ đó.
+     */
+    private fun recordDrowsyHour() {
+        val prefs = getSharedPreferences("agrypnia_prefs", MODE_PRIVATE)
+        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        val arr = (prefs.getString("drowsy_hours", null)?.split(",")
+            ?.map { it.trim().toIntOrNull() ?: 0 } ?: List(24) { 0 }).toMutableList()
+        while (arr.size < 24) arr.add(0)
+        arr[hour] = arr[hour] + 1
+        prefs.edit().putString("drowsy_hours", arr.take(24).joinToString(",")).apply()
     }
 
     /**
