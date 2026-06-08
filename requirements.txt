@@ -7,6 +7,7 @@ pillow>=10.0
 pandas>=2.0
 opencv-python-headless>=4.8   # headless: hợp cloud (KHÔNG dùng opencv-python để tránh lỗi libGL)
 mediapipe>=0.10,<0.11         # FaceLandmarker → EAR/MAR (dòng 0.10.x có wheel ổn định cho Python 3.11/3.12)
+streamlit-autorefresh>=0.0.1  # auto-rerun mỗi 1.5s khi đang giám sát → monitoring liên tục
 
 # ─── TÙY CHỌN: camera TRỰC TIẾP (WebRTC). Thiếu vẫn chạy đầy đủ bằng chế độ chụp ảnh. ───
 # Hai gói này hay gây LỖI BUILD trên Streamlit Cloud (av cần ffmpeg, webrtc cần TURN server)
