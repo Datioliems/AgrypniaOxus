@@ -269,6 +269,76 @@ def analyze_snapshot(pil_img, ear_thr, mar_thr):
     return status, ear, mar, img
 
 
+def analyze_video(video_file, ear_thr, mar_thr, sample_fps=2, max_frames=120):
+    """Phân tích video upload — lấy mẫu sample_fps khung/giây, tối đa max_frames khung.
+
+    Trả về:
+      results   : list[dict{t, status, ear, mar}]   — 1 entry mỗi frame lấy mẫu
+      highlights: list[dict{t, status, img}]         — tối đa 6 frame DROWSY/WARNING (ảnh nhỏ RGB)
+      total_frames: tổng số frame trong video
+      video_fps : FPS thực của video
+    """
+    import os
+    import tempfile
+    suffix = "." + video_file.name.rsplit(".", 1)[-1].lower()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(video_file.getvalue())
+        tmp_path = tmp.name
+
+    results, highlights = [], []
+    total_frames, video_fps = 0, 25.0
+    try:
+        cap = cv2.VideoCapture(tmp_path)
+        if not cap.isOpened():
+            return results, highlights, total_frames, video_fps
+        video_fps    = cap.get(cv2.CAP_PROP_FPS) or 25.0
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        interval     = max(1, int(video_fps / sample_fps))
+        lmk          = _cached_landmarker()
+        frame_idx = processed = 0
+
+        while cap.isOpened() and processed < max_frames:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            if frame_idx % interval == 0:
+                t   = round(frame_idx / video_fps, 2)
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                res = lmk.detect(mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb))
+                h, w = frame.shape[:2]
+                if res.face_landmarks:
+                    lmpts = res.face_landmarks[0]
+                    P = lambda i: (lmpts[i].x * w, lmpts[i].y * h)   # noqa: E731
+                    ear = (_ear([P(i) for i in LEFT_EYE]) + _ear([P(i) for i in RIGHT_EYE])) / 2
+                    mar = _mar(P(MOUTH[0]), P(MOUTH[1]), P(MOUTH[2]), P(MOUTH[3]))
+                    status = ("DROWSY"  if ear < ear_thr else
+                              "WARNING" if mar > mar_thr else "ALERT")
+                    results.append({"t": t, "status": status,
+                                    "ear": round(ear, 3), "mar": round(mar, 3)})
+                    if status in ("DROWSY", "WARNING") and len(highlights) < 6:
+                        col = (0, 0, 255) if status == "DROWSY" else (0, 180, 230)
+                        ann = frame.copy()
+                        for i in LEFT_EYE + RIGHT_EYE:
+                            cv2.circle(ann, tuple(map(int, P(i))), 2, col, -1)
+                        cv2.putText(ann, f"{t:.1f}s | {status}",
+                                    (8, 26), cv2.FONT_HERSHEY_SIMPLEX, 0.55, col, 2)
+                        highlights.append({
+                            "t": t, "status": status,
+                            "img": cv2.cvtColor(cv2.resize(ann, (200, 150)),
+                                                cv2.COLOR_BGR2RGB)})
+                else:
+                    results.append({"t": t, "status": "NO FACE", "ear": 0.0, "mar": 0.0})
+                processed += 1
+            frame_idx += 1
+        cap.release()
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except Exception:
+            pass
+    return results, highlights, total_frames, video_fps
+
+
 # ───────────────────────── CSS (theme đỏ–đen "Stitch") ─────────────────────────
 THEME_CSS = """
 <style>
@@ -322,14 +392,18 @@ def page_dashboard():
     ss = st.session_state
     c1, c2 = st.columns([3, 2])
 
-    vp = None
+    vp          = None
     snap_status = None
+    vid_results = None   # (vr, vh, cnt, vtot, vfps) — chỉ có giá trị khi đang ở video mode
+
     with c1:
-        modes = ["📸 Chụp ảnh (ổn định, hợp web)"]
+        modes = ["📸 Chụp ảnh (ổn định, hợp web)",
+                 "📹 Upload video (phân tích offline)"]
         if WEBRTC_OK:
             modes.append("🎥 Camera trực tiếp (WebRTC)")
         mode = st.radio("Chế độ camera", modes, horizontal=True, label_visibility="collapsed")
 
+        # ── 🎥 WebRTC ──────────────────────────────────────────────────────────
         if mode.startswith("🎥"):
             try:
                 ctx = webrtc_streamer(
@@ -342,7 +416,57 @@ def page_dashboard():
                     vp.ear_thr, vp.mar_thr = ss.ear_thr, ss.mar_thr
                     vp.closed_sec, vp.show = ss.closed_sec, True
             except Exception as e:
-                st.warning(f"⚠️ Camera trực tiếp lỗi — hãy chuyển sang chế độ chụp ảnh. ({e})")
+                st.warning(f"⚠️ Camera trực tiếp lỗi — chuyển sang chế độ chụp ảnh. ({e})")
+
+        # ── 📹 Upload video ────────────────────────────────────────────────────
+        elif mode.startswith("📹"):
+            vid_up = st.file_uploader(
+                "Chọn file video để phân tích buồn ngủ (mp4 / avi / mov / mkv)",
+                type=["mp4", "avi", "mov", "mkv", "webm"],
+                label_visibility="collapsed")
+            if vid_up is not None:
+                vid_key = f"_vid_{vid_up.name}_{vid_up.size}"
+                if vid_key not in ss:
+                    with st.spinner(
+                            f"🔍 Đang phân tích **{vid_up.name}** … "
+                            f"(lấy mẫu 2 FPS, tối đa 60 giây)"):
+                        ss[vid_key] = analyze_video(vid_up, ss.ear_thr, ss.mar_thr,
+                                                    sample_fps=2, max_frames=120)
+                vr, vh, vtot, vfps = ss[vid_key]
+                if vr:
+                    import pandas as pd
+                    cnt = {s: sum(1 for r in vr if r["status"] == s)
+                           for s in ("ALERT", "WARNING", "DROWSY", "NO FACE")}
+                    snap_status = ("DROWSY"  if cnt["DROWSY"]  > 0 else
+                                   "WARNING" if cnt["WARNING"] > 0 else "ALERT")
+                    vid_results = (vr, vh, cnt, vtot, vfps)
+                    if snap_status == "DROWSY":
+                        bump_hour()
+
+                    # ── Timeline EAR ─────────────────────────────────────────
+                    df_v = pd.DataFrame(
+                        [{"Thời gian (s)": r["t"], "EAR": r["ear"], "MAR": r["mar"]}
+                         for r in vr if r["status"] != "NO FACE"])
+                    if not df_v.empty:
+                        st.caption("📈 EAR theo thời gian — dưới ngưỡng = buồn ngủ ↓")
+                        df_v = df_v.set_index("Thời gian (s)")
+                        st.line_chart(df_v[["EAR"]], color=["#FC1C46"], height=165)
+
+                    # ── Gallery frame cảnh báo ────────────────────────────────
+                    if vh:
+                        with st.expander(f"⚠️ {len(vh)} frame cần chú ý", expanded=True):
+                            gcols = st.columns(min(len(vh), 3))
+                            for gi, hf in enumerate(vh):
+                                gcols[gi % 3].image(
+                                    hf["img"],
+                                    caption=f"{hf['t']}s · {hf['status']}",
+                                    use_container_width=True)
+                    else:
+                        st.success("✅ Không phát hiện dấu hiệu buồn ngủ trong video này.")
+                else:
+                    st.warning("Không đọc được video hoặc không tìm thấy khuôn mặt.")
+
+        # ── 📸 Chụp ảnh ────────────────────────────────────────────────────────
         else:
             snap = st.camera_input("Chụp ảnh khuôn mặt để phân tích")
             if snap is not None:
@@ -355,39 +479,55 @@ def page_dashboard():
                 if s_status == "DROWSY":
                     bump_hour()
 
+    # ── Cột phải ───────────────────────────────────────────────────────────────
     with c2:
-        ss.monitoring = st.toggle("🟢 KÍCH HOẠT GIÁM SÁT", value=ss.monitoring)
-        metric_card("Số lần ngáp (phiên này)", vp.yawn_count if vp else 0)
+        if vid_results:
+            # Metrics tổng hợp từ video
+            vr, vh, cnt, vtot, vfps = vid_results
+            n    = len(vr)
+            dur  = round(vtot / vfps) if vfps > 0 else 0
+            pct_d = round(cnt["DROWSY"]  / n * 100) if n > 0 else 0
+            pct_w = round(cnt["WARNING"] / n * 100) if n > 0 else 0
+            metric_card("Độ dài video", f"{dur}s ({n} mẫu)")
+            metric_card("Tỉ lệ buồn ngủ",   f"{pct_d}%")
+            metric_card("Tỉ lệ cảnh báo",   f"{pct_w}%")
+        else:
+            ss.monitoring = st.toggle("🟢 KÍCH HOẠT GIÁM SÁT", value=ss.monitoring)
+            metric_card("Số lần ngáp (phiên này)", vp.yawn_count if vp else 0)
 
+        # Thanh trạng thái chung (hiển thị cả 3 mode)
         status = (vp.status if vp else None) or snap_status or "—"
-        cls = {"ALERT": "status-alert", "WARNING": "status-warn",
-               "DROWSY": "status-drowsy"}.get(status, "status-warn")
-        label = {"ALERT": "✅ TỈNH TÁO", "WARNING": "🟡 CÓ DẤU HIỆU MỆT",
-                 "DROWSY": "🔴 BUỒN NGỦ!", "NO FACE": "🔍 Không thấy mặt"}.get(status, status)
+        cls    = {"ALERT": "status-alert", "WARNING": "status-warn",
+                  "DROWSY": "status-drowsy"}.get(status, "status-warn")
+        label  = {"ALERT": "✅ TỈNH TÁO", "WARNING": "🟡 CÓ DẤU HIỆU MỆT",
+                  "DROWSY": "🔴 BUỒN NGỦ!", "NO FACE": "🔍 Không thấy mặt"}.get(status, status)
         st.markdown(f'<div class="statusbar {cls}">{label}</div>', unsafe_allow_html=True)
-        if vp:
-            st.progress(min(vp.ear / 0.4, 1.0), text=f"EAR {vp.ear:.2f}")
 
-        # ⏱️ Thời gian lái + nhắc nghỉ ở mốc 2 giờ và 4 giờ (CK AI §1.3)
-        mins = int((time.time() - ss.drive_start) / 60)
-        st.caption(f"⏱️ Thời gian lái liên tục: {mins // 60} giờ {mins % 60} phút")
-        for mark in (2, 4):
-            if mins >= mark * 60 and not ss.get(f"rest_{mark}"):
-                ss[f"rest_{mark}"] = True
-                st.warning(f"⏰ Bạn đã lái {mark} giờ liên tục — nên dừng nghỉ 15–30 phút!")
+        if not vid_results:
+            if vp:
+                st.progress(min(vp.ear / 0.4, 1.0), text=f"EAR {vp.ear:.2f}")
 
-        if ss.monitoring:
-            if vp and vp.event:
-                ss.history.append((time.strftime("%H:%M:%S"), vp.event[0], vp.event[1]))
-                if vp.event[0] == "Nhắm mắt":
-                    bump_hour()
-            if status == "DROWSY":
-                ss.page = "Alert"; st.rerun()
+            # ⏱️ Thời gian lái + nhắc nghỉ mốc 2 giờ / 4 giờ (CK AI §1.3)
+            mins = int((time.time() - ss.drive_start) / 60)
+            st.caption(f"⏱️ Thời gian lái liên tục: {mins // 60} giờ {mins % 60} phút")
+            for mark in (2, 4):
+                if mins >= mark * 60 and not ss.get(f"rest_{mark}"):
+                    ss[f"rest_{mark}"] = True
+                    st.warning(f"⏰ Bạn đã lái {mark} giờ liên tục — nên dừng nghỉ 15–30 phút!")
 
-    st.info("Bật **Kích hoạt giám sát**, rồi nhắm mắt > 1.5s hoặc ngáp để thử cảnh báo. "
-            "Âm thanh dùng **binaural beats dải beta** — nghe rõ nhất khi đeo tai nghe.")
+            if ss.monitoring:
+                if vp and vp.event:
+                    ss.history.append((time.strftime("%H:%M:%S"), vp.event[0], vp.event[1]))
+                    if vp.event[0] == "Nhắm mắt":
+                        bump_hour()
+                if status == "DROWSY":
+                    ss.page = "Alert"; st.rerun()
+
+    if not vid_results:
+        st.info("Bật **Kích hoạt giám sát**, rồi nhắm mắt > 1.5s hoặc ngáp để thử cảnh báo. "
+                "Âm thanh dùng **binaural beats dải beta** — nghe rõ nhất khi đeo tai nghe.")
     if not WEBRTC_OK:
-        st.caption("ℹ️ Bản web đang chạy chế độ **chụp ảnh** (không cần WebRTC) — ổn định khi deploy.")
+        st.caption("ℹ️ Bản web chạy chế độ **chụp ảnh / upload video** — ổn định khi deploy.")
 
 
 def page_alert():
