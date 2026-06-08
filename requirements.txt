@@ -1,0 +1,17 @@
+# DrowsyDriver — Streamlit demo (3 màn hình) dependencies
+# Cài local:  pip install -r requirements-streamlit.txt
+# Deploy:     Streamlit Community Cloud đọc file này tự cài
+
+streamlit>=1.35
+numpy>=1.26
+pillow>=10.0
+pandas>=2.0
+
+# ─── Camera realtime + xử lý frame ───
+streamlit-webrtc>=0.47        # webcam live trong trình duyệt
+av>=11.0                      # decode video frame cho webrtc
+opencv-python-headless>=4.8   # headless: hợp deploy cloud (KHÔNG dùng opencv-python để tránh lỗi libGL)
+mediapipe>=0.10.0             # FaceMesh → EAR/MAR
+
+# ─── CNN TFLite (TÙY CHỌN — nặng, bỏ comment nếu muốn chạy thêm CNN) ───
+# tensorflow-cpu>=2.15        # hoặc tflite-runtime cho nhẹ hơn
