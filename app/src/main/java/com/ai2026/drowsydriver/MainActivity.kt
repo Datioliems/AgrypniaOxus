@@ -57,12 +57,18 @@ class MainActivity : ComponentActivity() {
     private var drowsyMs = 0L
     private var prevState = DriverState.AWAKE
     private var lastStatsWrite = 0L
+    private var autoLocationSent = false   // đã tự gửi định vị trong chuyến đi này chưa
 
     private val requestPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) startCamera() else showMessage("Camera permission is required")
     }
+
+    // Xin quyền cho tính năng TỰ ĐỘNG gửi định vị (SMS + vị trí)
+    private val requestEmergencyPerms = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { /* không chặn camera; chỉ bật được auto-SMS nếu người dùng đồng ý */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,6 +87,12 @@ class MainActivity : ComponentActivity() {
         } else {
             requestPermission.launch(Manifest.permission.CAMERA)
         }
+
+        // Xin sẵn quyền SMS + vị trí để tính năng tự động gửi định vị hoạt động khi cần
+        requestEmergencyPerms.launch(arrayOf(
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ))
     }
 
     override fun onDestroy() {
@@ -141,7 +153,10 @@ class MainActivity : ComponentActivity() {
         if (sessionStart == 0L) sessionStart = now
         if (status.state == DriverState.DROWSY) {
             drowsyMs += 100L
-            if (prevState != DriverState.DROWSY) drowsyCount++
+            if (prevState != DriverState.DROWSY) {
+                drowsyCount++
+                maybeAutoSendLocation()
+            }
         }
         if (status.state == DriverState.YAWNING && prevState != DriverState.YAWNING) yawnCount++
         prevState = status.state
@@ -154,6 +169,27 @@ class MainActivity : ComponentActivity() {
                 .putLong("drowsy_sec", drowsyMs / 1000)
             if (status.state == DriverState.DROWSY) e.putString("last_drowsy_at", ts)
             e.apply()
+        }
+    }
+
+    /**
+     * Khi số lần buồn ngủ vượt ngưỡng an toàn → TỰ ĐỘNG gửi định vị cho người thân.
+     * Chỉ gửi MỘT lần trong mỗi chuyến đi (mỗi lần mở app) để tránh gửi lặp.
+     */
+    private fun maybeAutoSendLocation() {
+        if (autoLocationSent) return
+        val limit = EmergencyDispatcher.drowsyLimit(this)
+        if (drowsyCount < limit) return
+        autoLocationSent = true
+        val result = EmergencyDispatcher.autoSendLocation(
+            this, "buồn ngủ $drowsyCount lần (vượt ngưỡng $limit lần)"
+        )
+        getSharedPreferences("agrypnia_prefs", MODE_PRIVATE).edit()
+            .putBoolean("auto_sent_trip", result?.startsWith("Đã") == true).apply()
+        if (result != null) {
+            showMessage("🆘 $result")
+        } else {
+            showMessage("⚠️ Vượt ngưỡng buồn ngủ — thêm SĐT người thân ở màn 🆘 để tự gửi định vị")
         }
     }
 

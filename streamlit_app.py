@@ -176,20 +176,56 @@ if DEPS_OK:
             return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
-# ───────────────────────── CSS ─────────────────────────
-FLASH_CSS = """
+# ───────────────────────── CSS (theme đỏ–đen "Stitch") ─────────────────────────
+THEME_CSS = """
 <style>
-@keyframes flash { 0%,100%{background:#7f0000} 50%{background:#ff1e1e} }
-.alert-box{animation:flash .6s infinite;border-radius:20px;padding:40px;text-align:center;color:#fff}
-.statusbar{padding:18px;border-radius:14px;color:#fff;font-size:24px;font-weight:800;text-align:center}
-.status-alert{background:#1b8a3a}.status-warn{background:#caa300}.status-drowsy{background:#c0392b}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+.stApp{background:radial-gradient(1100px 560px at 82% -12%, #2a0a12 0%, #0E0E10 55%) fixed;
+       color:#F5F5F7;font-family:'Inter',system-ui,sans-serif}
+#MainMenu,footer{visibility:hidden}
+.block-container{padding-top:1.6rem}
+/* Hero banner */
+.hero{background:linear-gradient(135deg,#FC1C46 0%,#7a0d22 58%,#1B1B1E 100%);
+      border-radius:24px;padding:26px 30px;margin-bottom:18px;box-shadow:0 12px 42px rgba(252,28,70,.28)}
+.hero h1{color:#fff;font-size:30px;font-weight:800;margin:0;letter-spacing:.3px}
+.hero p{color:#ffe;opacity:.92;margin:6px 0 0;font-size:15px}
+/* Thẻ & metric */
+.card{background:#1B1B1E;border:1px solid #2a2a2e;border-radius:20px;padding:20px;margin-bottom:14px}
+.metric{background:#1B1B1E;border:1px solid #2a2a2e;border-radius:18px;padding:16px 18px;text-align:center}
+.metric .v{font-size:34px;font-weight:800;color:#FC1C46;line-height:1.1}
+.metric .l{color:#9A9AA0;font-size:13px;margin-top:4px}
+/* Thanh trạng thái */
+.statusbar{padding:18px;border-radius:16px;color:#fff;font-size:24px;font-weight:800;text-align:center;
+           box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.status-alert{background:linear-gradient(135deg,#1b8a3a,#0c5022)}
+.status-warn{background:linear-gradient(135deg,#caa300,#7a6200)}
+.status-drowsy{background:linear-gradient(135deg,#e23,#7a1f16)}
+/* Nút bấm */
+.stButton>button{border-radius:14px;font-weight:700;border:1px solid #333;background:#1B1B1E;color:#fff;transition:.15s}
+.stButton>button:hover{border-color:#FC1C46;color:#FC1C46;transform:translateY(-1px)}
+/* Cảnh báo nhấp nháy */
+@keyframes flash{0%,100%{background:#7f0000}50%{background:#ff1e1e}}
+.alert-box{animation:flash .6s infinite;border-radius:24px;padding:46px;text-align:center;color:#fff;
+           box-shadow:0 0 70px rgba(255,30,30,.55)}
+/* Sidebar */
+section[data-testid="stSidebar"]{background:#141416;border-right:1px solid #2a2a2e}
+section[data-testid="stSidebar"] .stRadio label{color:#F5F5F7}
 </style>
 """
 
 
+def hero(title, subtitle):
+    st.markdown(f'<div class="hero"><h1>{title}</h1><p>{subtitle}</p></div>', unsafe_allow_html=True)
+
+
+def metric_card(label, value):
+    st.markdown(f'<div class="metric"><div class="v">{value}</div><div class="l">{label}</div></div>',
+                unsafe_allow_html=True)
+
+
 # ════════════════════════ CÁC MÀN HÌNH ════════════════════════
 def page_dashboard():
-    st.title("🚗 Dashboard — Giám sát tài xế")
+    hero("🚗 DrowsyDriver AI", "Giám sát tài xế thời gian thực — CNN + MediaPipe (EAR/MAR)")
     ss = st.session_state
     c1, c2 = st.columns([3, 2])
 
@@ -207,7 +243,7 @@ def page_dashboard():
     with c2:
         ss.monitoring = st.toggle("🟢 KÍCH HOẠT GIÁM SÁT", value=ss.monitoring)
         vp = ctx.video_processor if ctx else None
-        st.metric("Số lần ngáp (phiên này)", vp.yawn_count if vp else 0)
+        metric_card("Số lần ngáp (phiên này)", vp.yawn_count if vp else 0)
 
         status = vp.status if vp else "—"
         cls = {"ALERT": "status-alert", "WARNING": "status-warn",
@@ -231,7 +267,6 @@ def page_dashboard():
 
 def page_alert():
     ss = st.session_state
-    st.markdown(FLASH_CSS, unsafe_allow_html=True)
     st.markdown('<div class="alert-box"><h1>⚠️ CẢNH BÁO BUỒN NGỦ ⚠️</h1>'
                 '<h2>Hãy tỉnh táo hoặc dừng nghỉ ngay!</h2></div>', unsafe_allow_html=True)
     play_sound(SOUNDS[ss.sound])
@@ -248,7 +283,7 @@ def page_alert():
 
 def page_analytics():
     ss = st.session_state
-    st.title("📊 Thống kê & Cài đặt")
+    hero("📊 Thống kê & Cài đặt", "Lịch sử buồn ngủ trong phiên · tinh chỉnh độ nhạy AI")
 
     st.subheader("Lịch sử buồn ngủ trong phiên")
     if ss.history:
@@ -277,6 +312,7 @@ def page_analytics():
 # ════════════════════════ MAIN ════════════════════════
 def main():
     init_state()
+    st.markdown(THEME_CSS, unsafe_allow_html=True)
     ss = st.session_state
     with st.sidebar:
         st.header("🚗 DrowsyDriver")
