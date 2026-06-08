@@ -99,39 +99,38 @@ comp.append(docx.Document("outputs/_merge_ch3.docx"))
 master.add_page_break()
 comp.append(docx.Document("outputs/_merge_ch4.docx"))
 
-# ─── 3b) Đánh số lại heading Ch3/Ch4 (mất số sau merge) bằng numbering của Ch2 ───
+# ─── 3b) ĐÁNH SỐ CỨNG vào text heading (auto-number xung đột sau merge) ───
+import string
 def sname(p):
     try: return p.style.name or ""
     except Exception: return ""
 
-# numId mà Ch2 dùng cho heading
-NUMID = None
-for p in master.paragraphs:
-    if sname(p) == "Heading 1" and p._p.pPr is not None:
-        np_ = p._p.pPr.find(qn("w:numPr"))
-        if np_ is not None and np_.find(qn("w:numId")) is not None:
-            NUMID = np_.find(qn("w:numId")).get(qn("w:val")); break
-
 LVL = {"Heading 1": 0, "Heading 2": 1, "Heading 3": 2, "Heading 4": 3}
-
-def apply_num(p, num_id, ilvl):
-    pPr = p._p.get_or_add_pPr()
-    numPr = OxmlElement("w:numPr")
-    il = OxmlElement("w:ilvl"); il.set(qn("w:val"), str(ilvl)); numPr.append(il)
-    ni = OxmlElement("w:numId"); ni.set(qn("w:val"), str(num_id)); numPr.append(ni)
-    pStyle = pPr.find(qn("w:pStyle"))
-    if pStyle is not None: pStyle.addnext(numPr)
-    else: pPr.insert(0, numPr)
-
-fixed = 0
-if NUMID:
-    for p in master.paragraphs:
-        sn = sname(p)
-        if sn in LVL and p.text.strip():
-            pPr = p._p.pPr
-            if pPr is None or pPr.find(qn("w:numPr")) is None:
-                apply_num(p, NUMID, LVL[sn]); fixed += 1
-print(f"Đánh số lại heading Ch3/Ch4: {fixed} heading (numId={NUMID})")
+ch = 1; sec = 0; sub = 0; let = 0; fixed = 0
+for p in master.paragraphs:
+    sn = sname(p)
+    if sn not in LVL or not p.text.strip():
+        continue
+    # bỏ auto-numbering cũ (numPr) để không nhân đôi số
+    pPr = p._p.pPr
+    if pPr is not None:
+        npr = pPr.find(qn("w:numPr"))
+        if npr is not None: pPr.remove(npr)
+    lvl = LVL[sn]
+    if lvl == 0:
+        ch += 1; sec = sub = let = 0; label = f"CHƯƠNG {ch}: "
+    elif lvl == 1:
+        sec += 1; sub = let = 0; label = f"{ch}.{sec}. "
+    elif lvl == 2:
+        sub += 1; let = 0; label = f"{ch}.{sec}.{sub}. "
+    else:
+        let += 1; label = f"{string.ascii_lowercase[(let-1) % 26]}. "
+    if p.runs:
+        p.runs[0].text = label + p.runs[0].text.lstrip()
+    else:
+        p.add_run(label)
+    fixed += 1
+print(f"Đánh số cứng heading: {fixed} heading (Ch2..Ch{ch})")
 
 comp.save(OUT)
 print("ĐÃ HỢP NHẤT ->", OUT)
