@@ -1,7 +1,0 @@
-split,class,count,checked,valid_checked,corrupt_checked,extensions,top_dimensions
-train,eyes_closed,25167,2000,2000,0,.png:25167,96x96:89; 95x95:89; 94x94:81; 97x97:71; 93x93:68
-train,eyes_open,25770,2000,2000,0,.png:25770,82x82:112; 83x83:97; 80x80:86; 84x84:83; 81x81:81
-val,eyes_closed,8389,2000,2000,0,.png:8389,95x95:81; 96x96:76; 97x97:69; 93x93:68; 94x94:67
-val,eyes_open,8591,2000,2000,0,.png:8591,74x74:66; 71x71:62; 90x90:58; 70x70:55; 73x73:55
-test,eyes_closed,8390,2000,2000,0,.png:8390,95x95:85; 97x97:73; 90x90:67; 94x94:67; 98x98:65
-test,eyes_open,8591,2000,2000,0,.png:8591,74x74:75; 72x72:67; 70x70:64; 84x84:61; 73x73:55

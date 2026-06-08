@@ -53,3 +53,21 @@ mau_thiet_ke/
 # VS Code
 .vscode/settings.json
 _s8tmp/
+
+# Tài liệu nháp/kế hoạch + thiết kế (giữ local, ẩn khỏi GitHub)
+docs/
+design_stitch/
+research/
+_rgbdata/
+*.zip
+/AGENT_GUIDE.md
+/CODE_AUDIT_ERRORS.md
+/DEVELOPMENT_PLAN.md
+/EXECUTION_GUIDE.md
+/GUIDE_3H.md
+/MASTER_PLAN.md
+/PLAN_3H_FULL.md
+/TRAINING_PLAN.md
+/coderabbit_review_report.md
+/gen_report.js
+/BaoCao_IS54A_DrowsyDriver.docx
