@@ -115,6 +115,32 @@ my1 = add_samples("dataset_yawn/train/no_yawn", f"{YAWN}/no_yawn", 1000)
 my2 = add_samples("dataset_yawn/train/yawn",    f"{YAWN}/yawn",    1000)
 print(f"  + trộn data GỐC: eye(+{me1}/+{me2}) yawn(+{my1}/+{my2}) → robust mọi góc mặt")
 
+# ── TRỘN bộ RGB Datio_yolo (crop theo NHÃN BOX sẵn — ảnh màu khớp camera) ──
+# Class: 0=close_eyeL 1=close_eyeR 2=no_yawn 3=open_eyeL 4=open_eyeR 5=yawn
+RGB_IMG = "_rgbdata/train/images"; RGB_LBL = "_rgbdata/train/labels"
+def crop_yolo(img, parts, pad=0.15):
+    cx, cy, w, h = map(float, parts[1:5]); Hh, Ww = img.shape[:2]
+    x1 = int((cx - w/2 - w*pad)*Ww); x2 = int((cx + w/2 + w*pad)*Ww)
+    y1 = int((cy - h/2 - h*pad)*Hh); y2 = int((cy + h/2 + h*pad)*Hh)
+    x1, y1 = max(0, x1), max(0, y1); c = img[y1:y2, x1:x2]
+    return cv2.resize(c, (64, 64)) if c.size else None
+re_ = ro_ = ry_ = rn_ = 0
+for ip in glob.glob(f"{RGB_IMG}/*.jpg"):
+    lp = f"{RGB_LBL}/{os.path.splitext(os.path.basename(ip))[0]}.txt"
+    if not os.path.exists(lp): continue
+    img = imread_u(ip)
+    if img is None: continue
+    for line in open(lp):
+        parts = line.split()
+        if len(parts) < 5: continue
+        cls = int(parts[0]); c = crop_yolo(img, parts)
+        if c is None: continue
+        if cls in (0, 1):   cv2.imwrite(f"{EYE}/eyes_closed/rgb_{re_}.jpg", c); re_ += 1
+        elif cls in (3, 4): cv2.imwrite(f"{EYE}/eyes_open/rgb_{ro_}.jpg", c);  ro_ += 1
+        elif cls == 5:      cv2.imwrite(f"{YAWN}/yawn/rgb_{ry_}.jpg", c);      ry_ += 1
+        elif cls == 2:      cv2.imwrite(f"{YAWN}/no_yawn/rgb_{rn_}.jpg", c);   rn_ += 1
+print(f"  + RGB Datio_yolo: eye(closed+{re_}/open+{ro_}) yawn(yawn+{ry_}/no+{rn_}) → ảnh màu khớp camera")
+
 def train_cnn(data_dir, classes, out_tflite, epochs=20):
     # Data ít + frame gần trùng → KHÔNG dùng BatchNorm (gây gap train/val), thêm augmentation
     # + class_weight (cân bằng lớp) + dropout cao để chống overfit.
