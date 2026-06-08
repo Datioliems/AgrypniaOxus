@@ -26,7 +26,17 @@ class DrowsinessAnalyzer {
 
         val leftEar = eyeAspectRatio(face, 33, 160, 158, 133, 153, 144)
         val rightEar = eyeAspectRatio(face, 362, 385, 387, 263, 373, 380)
-        val ear = (leftEar + rightEar) / 2f
+        // ── XỬ LÝ MẶT NGHIÊNG ──────────────────────────────────────────────
+        // Khi nghiêng, mắt phía xa bị "co" lại (hẹp) → EAR sai. Mắt nào RỘNG hơn
+        // (chính diện hơn) thì đáng tin hơn → ưu tiên dùng mắt đó.
+        val leftEyeW = kotlin.math.abs(face[133].x() - face[33].x())
+        val rightEyeW = kotlin.math.abs(face[263].x() - face[362].x())
+        val widthRatio = leftEyeW / rightEyeW.coerceAtLeast(1e-4f)
+        val ear = when {
+            widthRatio in 0.70f..1.43f -> (leftEar + rightEar) / 2f   // gần chính diện → TB 2 mắt
+            widthRatio > 1.43f         -> leftEar                      // nghiêng: mắt trái rõ hơn
+            else                       -> rightEar                     // nghiêng: mắt phải rõ hơn
+        }
         val mar = mouthAspectRatio(face)
 
         val closedEyeMs = if (ear < eyeClosedThreshold) {
