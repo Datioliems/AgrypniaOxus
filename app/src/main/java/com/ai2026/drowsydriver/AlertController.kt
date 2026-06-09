@@ -27,16 +27,19 @@ import kotlin.math.sin
 class AlertController(private val context: Context) {
 
     private val sampleRate = 44100
-    private val tone = ToneGenerator(AudioManager.STREAM_ALARM, 90)
+    // ToneGenerator ở mức TỐI ĐA (100) — STREAM_ALARM tự theo âm lượng báo thức hệ thống
+    private val tone = ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME)
     private var lastAlertAt = 0L
     private var drowsyStreakStart = 0L
     private var drivingMinutes = 0
     private var lastRestNudgeAt = 0L
     private var restMark = 0   // mốc nghỉ đã nhắc (0 → 2h → 4h)
 
-    // Binaural beta-beat sinh sẵn: L=carrier, R=carrier+18Hz (∈ beta 13–21Hz). 2 mức nhỏ/to.
-    private val betaSoft by lazy { binauralPcm(carrier = 200.0, beat = 18.0, ms = 1400, vol = 0.55f) }
-    private val betaLoud by lazy { binauralPcm(carrier = 220.0, beat = 18.0, ms = 2200, vol = 0.95f) }
+    // Binaural beta-beat: tăng vol lên mức to hơn rõ rệt so với trước.
+    //   betaSoft: cảnh báo lần đầu / ngáp  (vol 0.78 → nghe rõ mà không chói)
+    //   betaLoud: DROWSY kéo dài / mốc nghỉ (vol 1.00 = full scale)
+    private val betaSoft by lazy { binauralPcm(carrier = 200.0, beat = 18.0, ms = 1600, vol = 0.78f) }
+    private val betaLoud by lazy { binauralPcm(carrier = 220.0, beat = 18.0, ms = 2400, vol = 1.00f) }
 
     /** Cập nhật thời gian lái (phút) để nhắc nghỉ ở mốc 2h và 4h (Wang 2014). Gọi từ MainActivity. */
     fun updateDrivingTime(minutes: Int) { drivingMinutes = minutes }

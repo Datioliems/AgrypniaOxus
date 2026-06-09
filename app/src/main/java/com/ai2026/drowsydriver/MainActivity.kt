@@ -152,9 +152,21 @@ class MainActivity : ComponentActivity() {
             labelColor = android.graphics.Color.parseColor("#FF8040")
         ) { startActivity(android.content.Intent(this@MainActivity, EmergencyContactActivity::class.java)) }
 
+        // Nút Tìm chỗ nghỉ (xanh lá)
+        val btnRest = makeNavButton(
+            iconRes    = R.drawable.ic_nav_rest,
+            bgRes      = R.drawable.bg_nav_rest,
+            label      = "Tìm chỗ nghỉ",
+            labelColor = android.graphics.Color.parseColor("#4DD68C")
+        ) { openNearbyRestArea() }
+
         navBar.addView(btnDashboard)
-        navBar.addView(android.view.View(this).apply {         // spacer giữa 2 nút
-            layoutParams = android.widget.LinearLayout.LayoutParams(dp(28), 1)
+        navBar.addView(android.view.View(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(dp(18), 1)
+        })
+        navBar.addView(btnRest)
+        navBar.addView(android.view.View(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(dp(18), 1)
         })
         navBar.addView(btnEmergency)
 
@@ -503,6 +515,28 @@ class MainActivity : ComponentActivity() {
 
     private fun showMessage(message: String) {
         runOnUiThread { messageView.text = message }
+    }
+
+    /**
+     * Mở Google Maps tìm trạm dừng / chỗ nghỉ gần nhất ngay lập tức.
+     * Ưu tiên Google Maps native (nếu cài); fallback về trình duyệt.
+     * Tìm đồng thời: trạm dừng chân, trạm xăng, bãi đỗ xe.
+     */
+    private fun openNearbyRestArea() {
+        val query   = "trạm dừng chân OR rest area OR gas station"
+        val geoUri  = android.net.Uri.parse("geo:0,0?q=${android.net.Uri.encode(query)}")
+        val mapsIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, geoUri)
+            .apply { setPackage("com.google.android.apps.maps") }
+
+        if (mapsIntent.resolveActivity(packageManager) != null) {
+            startActivity(mapsIntent)
+        } else {
+            // Fallback: mở trình duyệt với Google Maps web
+            val webUri = android.net.Uri.parse(
+                "https://www.google.com/maps/search/tr%E1%BA%A1m+d%E1%BB%ABng+ch%C3%A2n+g%E1%BA%A7n+%C4%91%C3%A2y"
+            )
+            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, webUri))
+        }
     }
 
     // ── Helpers UI ─────────────────────────────────────────────────────────

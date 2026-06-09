@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon Tìm chỗ nghỉ: ghim bản đồ + ký hiệu giường ngủ (trắng trên trong suốt) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Ghim bản đồ — thân giọt nước -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,4 C17.4,4 12,9.4 12,16 C12,24.6 24,40 24,40 C24,40 36,24.6 36,16 C36,9.4 30.6,4 24,4 Z" />
+
+    <!-- Vòng tròn trắng bên trong ghim (nền cho icon) -->
+    <path
+        android:fillColor="#22AA55"
+        android:pathData="M24,10 A7,7 0 1,1 23.99,10 Z" />
+
+    <!-- Biểu tượng giường (nằm trong vòng tròn ghim) -->
+    <!-- Thân giường dưới -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18.5,17.5 L29.5,17.5 L29.5,19.5 L18.5,19.5 Z" />
+    <!-- Đầu giường trái -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18.5,13.5 L20.5,13.5 L20.5,17.5 L18.5,17.5 Z" />
+    <!-- Gối trái -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M21,14.5 L23,14.5 L23,17 L21,17 Z" />
+    <!-- Gối phải -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M25,14.5 L27,14.5 L27,17 L25,17 Z" />
+
+    <!-- Điểm đáy ghim -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,38 L22.5,34 L25.5,34 Z" />
+
+    <!-- Nhãn "ZZZ" nghỉ ngơi — góc trên phải -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M33,6 L37,6 L33,10 L37,10" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M36,3 L39,3 L36,6 L39,6" />
+
+</vector>
