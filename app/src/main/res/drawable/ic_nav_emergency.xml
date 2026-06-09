@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon Khẩn cấp tự động: đèn cảnh báo / còi hú (trắng trên trong suốt) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Tia sáng trên cùng (12 giờ) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M24,4 L24,8" />
+
+    <!-- Tia 10:30 -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M13,7.5 L15,10.5" />
+
+    <!-- Tia 1:30 -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M35,7.5 L33,10.5" />
+
+    <!-- Tia trái (9 giờ) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M7,17 L11,17" />
+
+    <!-- Tia phải (3 giờ) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M41,17 L37,17" />
+
+    <!-- Thân đèn còi — mái vòm -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,30 C14,20 34,20 34,30 Z" />
+
+    <!-- Đế đèn còi -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M11,30 L37,30 L37,36 A2,2 0 0,1 35,38 L13,38 A2,2 0 0,1 11,36 Z" />
+
+    <!-- Tam giác cảnh báo bên trong mái vòm -->
+    <path
+        android:strokeColor="#FF6600"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M24,22 L19,29 L29,29 Z" />
+
+    <!-- Dấu chấm than: thân -->
+    <path
+        android:fillColor="#FF6600"
+        android:pathData="M23.2,24.5 L24.8,24.5 L24.5,27.2 L23.5,27.2 Z" />
+
+    <!-- Dấu chấm than: chấm -->
+    <path
+        android:fillColor="#FF6600"
+        android:pathData="M23.5,28 A0.6,0.6 0 1,1 24.5,28 A0.6,0.6 0 0,1 23.5,28 Z" />
+
+    <!-- Viền trắng quanh đế (bo dưới) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M11,36 A2,2 0 0,0 13,38 L35,38 A2,2 0 0,0 37,36" />
+
+    <!-- Thanh đế dưới cùng -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M9,39 L39,39 L39,42 A1,1 0 0,1 38,43 L10,43 A1,1 0 0,1 9,42 Z" />
+
+</vector>

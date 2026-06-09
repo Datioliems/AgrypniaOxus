@@ -128,21 +128,40 @@ class MainActivity : ComponentActivity() {
         )
         root.addView(messageView, messageParams)
 
-        // Nút điều hướng: Thống kê + SOS (góc trên phải)
+        // ── Thanh điều hướng dưới cùng: Dashboard + Khẩn cấp tự động ──────────
         val navBar = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setBackgroundColor(android.graphics.Color.argb(180, 10, 10, 14))
+            setPadding(dp(24), dp(10), dp(24), dp(14))
         }
-        navBar.addView(android.widget.Button(this).apply {
-            text = "📊"; textSize = 18f
-            setOnClickListener { startActivity(android.content.Intent(this@MainActivity, AnalyticsActivity::class.java)) }
+
+        // Nút Dashboard (xanh dương)
+        val btnDashboard = makeNavButton(
+            iconRes    = R.drawable.ic_nav_dashboard,
+            bgRes      = R.drawable.bg_nav_dashboard,
+            label      = "Dashboard",
+            labelColor = android.graphics.Color.parseColor("#4D9AFF")
+        ) { startActivity(android.content.Intent(this@MainActivity, AnalyticsActivity::class.java)) }
+
+        // Nút Khẩn cấp tự động (cam)
+        val btnEmergency = makeNavButton(
+            iconRes    = R.drawable.ic_nav_emergency,
+            bgRes      = R.drawable.bg_nav_emergency,
+            label      = "Khẩn cấp tự động",
+            labelColor = android.graphics.Color.parseColor("#FF8040")
+        ) { startActivity(android.content.Intent(this@MainActivity, EmergencyContactActivity::class.java)) }
+
+        navBar.addView(btnDashboard)
+        navBar.addView(android.view.View(this).apply {         // spacer giữa 2 nút
+            layoutParams = android.widget.LinearLayout.LayoutParams(dp(28), 1)
         })
-        navBar.addView(android.widget.Button(this).apply {
-            text = "🆘"; textSize = 18f
-            setOnClickListener { startActivity(android.content.Intent(this@MainActivity, EmergencyContactActivity::class.java)) }
-        })
+        navBar.addView(btnEmergency)
+
         root.addView(navBar, FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
-            Gravity.TOP or Gravity.END))
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM))
 
         setContentView(root)
     }
@@ -484,5 +503,68 @@ class MainActivity : ComponentActivity() {
 
     private fun showMessage(message: String) {
         runOnUiThread { messageView.text = message }
+    }
+
+    // ── Helpers UI ─────────────────────────────────────────────────────────
+
+    /** Chuyển dp → px theo mật độ màn hình thực. */
+    private fun dp(value: Int): Int =
+        (value * resources.displayMetrics.density + 0.5f).toInt()
+
+    /**
+     * Tạo một nút điều hướng dạng icon vuông bo góc + nhãn bên dưới.
+     * @param iconRes   R.drawable của vector icon (trắng trên trong suốt)
+     * @param bgRes     R.drawable của background (màu bo góc)
+     * @param label     Nhãn hiển thị dưới icon
+     * @param labelColor Màu chữ nhãn
+     * @param onClick   Hàm xử lý khi nhấn
+     */
+    private fun makeNavButton(
+        iconRes:    Int,
+        bgRes:      Int,
+        label:      String,
+        labelColor: Int,
+        onClick:    () -> Unit
+    ): android.widget.LinearLayout {
+        val btnSize  = dp(72)   // kích thước vuông icon tile
+        val iconSize = dp(40)   // kích thước icon bên trong
+
+        return android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setOnClickListener { onClick() }
+
+            // Icon tile (vuông bo góc)
+            addView(android.widget.ImageView(context).apply {
+                setImageResource(iconRes)
+                background = androidx.core.content.ContextCompat.getDrawable(context, bgRes)
+                scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+                setPadding(dp(14), dp(14), dp(14), dp(14))
+                layoutParams = android.widget.LinearLayout.LayoutParams(btnSize, btnSize).apply {
+                    bottomMargin = dp(6)
+                }
+                // Elevation + ripple
+                elevation = dp(4).toFloat()
+                isClickable = false   // click handled by parent LinearLayout
+                isFocusable = false
+            })
+
+            // Nhãn dưới icon
+            addView(android.widget.TextView(context).apply {
+                text = label
+                setTextColor(labelColor)
+                textSize = 11f
+                gravity = Gravity.CENTER
+                maxLines = 2
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    dp(90), android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            })
+        }
     }
 }

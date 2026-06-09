@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon Dashboard: màn hình máy tính + biểu đồ (trắng trên trong suốt) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Khung màn hình monitor -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.2"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:pathData="M5,8 L43,8 A2,2 0 0,1 45,10 L45,34 A2,2 0 0,1 43,36 L5,36 A2,2 0 0,1 3,34 L3,10 A2,2 0 0,1 5,8 Z" />
+
+    <!-- Chân màn hình -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M17,36 L17,42 M31,36 L31,42" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M13,42 L35,42" />
+
+    <!-- Đường kẻ ngang chia màn hình -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M3,22 L45,22" />
+
+    <!-- Đường kẻ dọc chia màn hình -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M24,22 L24,36" />
+
+    <!-- Pie chart (góc trên trái) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,10 L12,19 A9,9 0 0,1 12,10 Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,14.5 A4.5,4.5 0 1,1 12.01,14.5 Z" />
+
+    <!-- Bar chart (góc trên phải) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,20 L30,20 L30,12 L28,12 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,20 L34,20 L34,14 L32,14 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,20 L38,20 L38,10 L36,10 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,20 L42,20 L42,16 L40,16 Z" />
+
+    <!-- ECG line (góc dưới trái) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M4,29 L9,29 L11,24.5 L13,33.5 L15,25 L17,29 L22,29" />
+
+    <!-- Text lines (góc dưới phải) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M26,25.5 L44,25.5" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M26,29 L44,29" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M26,32.5 L38,32.5" />
+
+</vector>
