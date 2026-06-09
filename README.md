@@ -112,8 +112,6 @@ latency.
 
 ## Student Project Documents
 
-- `docs/PLAN_4_NGAY.md`: 4-day execution plan.
-- `docs/FINAL_4_DAY_RUNBOOK.md`: final runbook and scope guardrails.
 - `docs/PROJECT_STATUS_AND_SUBMISSION_CHECKLIST.md`: evidence and submission checklist.
 - `docs/RUBRIC_MAPPING.md`: grading-rubric mapping to current artifacts.
 - `docs/DEPLOYMENT_ARCHITECTURE_AND_VALUE.md`: deployment architecture and practical value.
