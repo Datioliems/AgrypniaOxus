@@ -1,0 +1,95 @@
+<!-- Placeholder logo icon — sẽ bị THAY bởi file logo_icon.png sau khi chạy tools/setup_logo.py -->
+<!-- Biểu tượng mắt + vô lăng đơn giản, màu đúng với bản chính thức -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Nền tròn xanh đậm -->
+    <path
+        android:fillColor="#0D1B3E"
+        android:pathData="M100,10 A90,90 0 1,1 99.99,10 Z" />
+
+    <!-- Viền ngoài hình mắt (eye outline) -->
+    <path
+        android:strokeColor="#1A3A7A"
+        android:strokeWidth="3"
+        android:fillColor="#112266"
+        android:pathData="
+            M20,100 C40,55 80,38 100,38
+            C120,38 160,55 180,100
+            C160,145 120,162 100,162
+            C80,162 40,145 20,100 Z" />
+
+    <!-- Con ngươi / vô lăng ngoài -->
+    <path
+        android:strokeColor="#2255CC"
+        android:strokeWidth="4"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M100,70 A32,32 0 1,1 99.99,70 Z" />
+
+    <!-- Vô lăng — tâm -->
+    <path
+        android:fillColor="#3366DD"
+        android:pathData="M100,92 A8,8 0 1,1 99.99,92 Z" />
+
+    <!-- Vô lăng — nan hoa 1 (lên) -->
+    <path
+        android:strokeColor="#2255CC"
+        android:strokeWidth="3.5"
+        android:pathData="M100,84 L100,72" />
+
+    <!-- Vô lăng — nan hoa 2 (xuống-trái) -->
+    <path
+        android:strokeColor="#2255CC"
+        android:strokeWidth="3.5"
+        android:pathData="M93,96 L83,104" />
+
+    <!-- Vô lăng — nan hoa 3 (xuống-phải) -->
+    <path
+        android:strokeColor="#2255CC"
+        android:strokeWidth="3.5"
+        android:pathData="M107,96 L117,104" />
+
+    <!-- Đường cao tốc (tam giác) -->
+    <path
+        android:fillColor="#0A1844"
+        android:pathData="M93,102 L107,102 L115,155 L85,155 Z" />
+
+    <!-- Vạch kẻ đường giữa (đứt đoạn bằng 2 rect nhỏ) -->
+    <path
+        android:fillColor="#334488"
+        android:pathData="M99,110 L101,110 L101,120 L99,120 Z" />
+    <path
+        android:fillColor="#334488"
+        android:pathData="M99,125 L101,125 L101,135 L99,135 Z" />
+    <path
+        android:fillColor="#334488"
+        android:pathData="M99,140 L101,140 L101,148 L99,148 Z" />
+
+    <!-- Sóng âm trái (teal) -->
+    <path
+        android:strokeColor="#00CEC9"
+        android:strokeWidth="2.5"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M55,88 A18,18 0 0,0 55,112" />
+    <path
+        android:strokeColor="#00CEC9"
+        android:strokeWidth="2"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M48,82 A27,27 0 0,0 48,118" />
+
+    <!-- Sóng âm phải (cam) -->
+    <path
+        android:strokeColor="#FDCB6E"
+        android:strokeWidth="2.5"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M145,88 A18,18 0 0,1 145,112" />
+    <path
+        android:strokeColor="#FDCB6E"
+        android:strokeWidth="2"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M152,82 A27,27 0 0,1 152,118" />
+
+</vector>

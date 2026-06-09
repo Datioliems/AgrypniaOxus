@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Theme riêng cho SplashActivity: nền đen tuyệt đối, không ActionBar, không flash trắng -->
+    <style name="SplashTheme" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowBackground">#0D0D0F</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:statusBarColor">#0D0D0F</item>
+        <item name="android:navigationBarColor">#0D0D0F</item>
+    </style>
+
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">false</item>
