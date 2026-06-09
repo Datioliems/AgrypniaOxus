@@ -29,7 +29,16 @@ object EmergencyDispatcher {
     private fun hasPerm(ctx: Context, p: String) =
         ContextCompat.checkSelfPermission(ctx, p) == PackageManager.PERMISSION_GRANTED
 
+    /**
+     * Lấy vị trí từ LocationTracker (thời gian thực) thay vì getLastKnownLocation (stale).
+     * LocationTracker.start() phải được gọi trước trong MainActivity.onCreate().
+     */
     private fun lastLocation(ctx: Context): String {
+        // Ưu tiên real-time GPS từ LocationTracker
+        val rtUrl = LocationTracker.mapsUrl
+        if (rtUrl.isNotBlank()) return rtUrl
+
+        // Fallback: thử getLastKnownLocation nếu tracker chưa có dữ liệu
         if (!hasPerm(ctx, Manifest.permission.ACCESS_FINE_LOCATION) &&
             !hasPerm(ctx, Manifest.permission.ACCESS_COARSE_LOCATION)) return "(chưa cấp quyền vị trí)"
         return try {
@@ -37,7 +46,7 @@ object EmergencyDispatcher {
             val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                 ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
             if (loc != null) "https://maps.google.com/?q=${loc.latitude},${loc.longitude}"
-            else "(chưa lấy được GPS)"
+            else "(GPS đang định vị — thử lại sau)"
         } catch (e: SecurityException) { "(lỗi quyền vị trí)" }
     }
 

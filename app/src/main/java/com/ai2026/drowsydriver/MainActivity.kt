@@ -65,10 +65,14 @@ class MainActivity : ComponentActivity() {
         if (granted) startCamera() else showMessage("Camera permission is required")
     }
 
-    // Xin quyền cho tính năng TỰ ĐỘNG gửi định vị (SMS + vị trí)
+    // Xin quyền SMS + vị trí; khi được cấp → khởi động GPS tracking ngay
     private val requestEmergencyPerms = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { /* không chặn camera; chỉ bật được auto-SMS nếu người dùng đồng ý */ }
+    ) { grants ->
+        val hasLoc = grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                     grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (hasLoc) LocationTracker.start(this)   // cấp quyền xong → bắt đầu tracking
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,11 +92,15 @@ class MainActivity : ComponentActivity() {
             requestPermission.launch(Manifest.permission.CAMERA)
         }
 
-        // Xin sẵn quyền SMS + vị trí để tính năng tự động gửi định vị hoạt động khi cần
+        // Xin quyền SMS + vị trí; sau khi cấp → tự khởi động GPS tracking
         requestEmergencyPerms.launch(arrayOf(
             Manifest.permission.SEND_SMS,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
         ))
+
+        // Khởi động GPS tracking thời gian thực ngay lập tức (nếu đã cấp quyền trước đó)
+        LocationTracker.start(this)
     }
 
     override fun onDestroy() {
@@ -102,6 +110,7 @@ class MainActivity : ComponentActivity() {
         tfliteClassifier?.close()
         yawnClassifier?.close()
         alertController.close()
+        LocationTracker.stop()   // dừng GPS tracking khi thoát app
     }
 
     private fun setupUi() {
@@ -518,24 +527,36 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * Mở Google Maps tìm trạm dừng / chỗ nghỉ gần nhất ngay lập tức.
-     * Ưu tiên Google Maps native (nếu cài); fallback về trình duyệt.
-     * Tìm đồng thời: trạm dừng chân, trạm xăng, bãi đỗ xe.
+     * Mở Google Maps tìm trạm dừng / chỗ nghỉ gần vị trí GPS THỰC của tài xế.
+     *
+     * Nếu LocationTracker có tọa độ thật:
+     *   → "geo:lat,lon?q=trạm dừng chân" (Maps zoom thẳng vào khu vực đang đứng)
+     * Nếu chưa có GPS:
+     *   → "geo:0,0?q=..." (Maps tự định vị)
      */
     private fun openNearbyRestArea() {
-        val query   = "trạm dừng chân OR rest area OR gas station"
-        val geoUri  = android.net.Uri.parse("geo:0,0?q=${android.net.Uri.encode(query)}")
+        val query = android.net.Uri.encode("trạm dừng chân")
+        // Dùng tọa độ thật nếu có, fallback về geo:0,0 (Maps tự tìm)
+        val baseGeo = if (LocationTracker.hasLocation) LocationTracker.geoUri else "geo:0,0"
+        val geoUri  = android.net.Uri.parse("$baseGeo?q=$query")
+
         val mapsIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, geoUri)
             .apply { setPackage("com.google.android.apps.maps") }
 
         if (mapsIntent.resolveActivity(packageManager) != null) {
             startActivity(mapsIntent)
         } else {
-            // Fallback: mở trình duyệt với Google Maps web
-            val webUri = android.net.Uri.parse(
-                "https://www.google.com/maps/search/tr%E1%BA%A1m+d%E1%BB%ABng+ch%C3%A2n+g%E1%BA%A7n+%C4%91%C3%A2y"
-            )
-            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, webUri))
+            // Fallback web: nếu có GPS dùng nearby search chính xác
+            val loc = LocationTracker.latest
+            val webUrl = if (loc != null) {
+                "https://www.google.com/maps/search/tram+dung+chan/@${loc.latitude},${loc.longitude},14z"
+            } else {
+                "https://www.google.com/maps/search/tram+dung+chan+gan+day"
+            }
+            startActivity(android.content.Intent(
+                android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse(webUrl)
+            ))
         }
     }
 

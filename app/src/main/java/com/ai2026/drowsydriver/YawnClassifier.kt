@@ -27,7 +27,13 @@ class YawnClassifier(context: Context) {
     companion object {
         private const val TAG          = "YawnCNN"
         private const val INPUT_SIZE   = 64
-        private const val MODEL_FILE   = "yawn_cbam.tflite"
+        /**
+         * Dùng yawn_model.tflite (không phải yawn_cbam.tflite) để:
+         *  - realdata flavor → load từ realdata/assets/yawn_model.tflite  (train từ 5k yawn dataset)
+         *  - original flavor → load từ main/assets/yawn_model.tflite
+         * yawn_cbam.tflite chỉ tồn tại trong main/assets nên không phù hợp cho realdata.
+         */
+        private const val MODEL_FILE   = "yawn_model.tflite"
         const val YAWN_CONF_THRESHOLD  = 0.60f  // cần 60% confidence để kết luận yawning
 
         val LABELS = arrayOf("no_yawn", "yawn")  // alphabetical order!
